@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <!-- CRITICAL: Prevent zoom on input focus (iOS) -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Spectrum_qr</title>
     
@@ -10,250 +11,374 @@
     <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
     
-    <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
-    
+    <!-- Fonts: Orbitron (Tech) & Inter (UI) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+
     <style>
+        /* === 1. GLOBAL RESET & VARIABLES === */
         :root {
-            --brass: #b8860b;
-            --brass-light: #d4af37;
-            --steel-dark: #0e0e0e;
-            --steel-mid: #1a1a1a;
-            --steel-light: #2b2b2b;
-            --r-channel: #ff3333;
-            --g-channel: #33ff33;
-            --b-channel: #3399ff;
+            --bg-app: #121212;
+            --bg-surface: #1E1E1E;
+            --text-primary: #FFFFFF;
+            --text-secondary: #888888;
+            --accent-orange: #FF6200;
+            --accent-green: #00FF9D;
+            --accent-brass: #B8860B; /* Old Brass */
+            --accent-steel: #2F4F4F; /* Gunmetal */
+            
+            --safe-area-top: env(safe-area-inset-top);
+            --safe-area-bottom: env(safe-area-inset-bottom);
         }
 
-        body {
-            font-family: 'Roboto Mono', monospace;
-            background-color: var(--steel-dark);
-            color: #e0e0e0;
-            touch-action: manipulation;
-            height: 100dvh; /* Dynamic viewport height for mobile */
-            width: 100vw;
-            overflow: hidden;
-            position: relative;
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
+        html, body {
+            margin: 0; padding: 0;
+            height: 100%;
+            width: 100%;
+            overflow: hidden; /* Disable scroll bounce */
+            background-color: var(--bg-app);
+            font-family: 'Inter', sans-serif;
+            color: var(--text-primary);
         }
 
-        /* Industrial Texture Overlay */
-        body::before {
-            content: "";
-            position: absolute;
-            inset: 0;
-            background: 
-                radial-gradient(circle at 50% 50%, #1a1a1a 0%, #000 100%),
-                url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.1'/%3E%3C/svg%3E");
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        .app-shell {
-            position: relative;
-            z-index: 1;
-            height: 100dvh;
+        /* === 2. APP SHELL (SPA CONTAINER) === */
+        #app {
+            height: 100%;
+            width: 100%;
             display: flex;
             flex-direction: column;
+            position: relative;
+            padding-top: var(--safe-area-top);
+            padding-bottom: var(--safe-area-bottom);
         }
 
-        /* Typography */
-        .font-tech { font-family: 'Black Ops One', cursive; }
-
-        /* UI Components */
-        .metal-bg {
-            background: linear-gradient(180deg, rgba(30,30,30,0.95) 0%, rgba(10,10,10,0.98) 100%);
+        /* === 3. HEADER COMPONENT === */
+        .app-header {
+            height: 56px;
+            min-height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            background: rgba(18, 18, 18, 0.95);
             backdrop-filter: blur(10px);
-            border-bottom: 2px solid #333;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            border-bottom: 1px solid #333;
+            z-index: 100;
         }
 
-        .btn-industrial {
-            position: relative;
-            overflow: hidden;
-            transition: all 0.2s;
-            text-transform: uppercase;
+        .header-title {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            font-size: 1.1rem;
             letter-spacing: 1px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.1);
-            border: 2px solid #444;
-        }
-        .btn-industrial:active {
-            transform: translateY(2px);
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.9);
-            background: #111;
-        }
-        .btn-industrial::after {
-            content: "";
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 2px;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            text-transform: uppercase;
+            transition: opacity 0.3s;
         }
 
-        /* View Transitions */
-        .view {
-            flex: 1;
-            display: none;
-            flex-direction: column;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-        .view.active {
+        .header-btn {
+            width: 48px;
+            height: 48px;
             display: flex;
-            opacity: 1;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: #fff;
+            cursor: pointer;
+        }
+        .header-btn:active { opacity: 0.7; }
+
+        /* === 4. SCREENS MANAGEMENT === */
+        .screen {
+            flex: 1;
+            display: none; /* Hidden by default */
+            flex-direction: column;
+            height: 100%;
+            overflow: hidden;
+        }
+        .screen.active { display: flex; }
+
+        /* === 5. BUTTONS (Massive & Touch Friendly) === */
+        .btn-massive {
+            width: 100%;
+            min-height: 72px;
+            border-radius: 12px;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            font-size: 1.2rem;
+            letter-spacing: 2px;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: transform 0.1s, box-shadow 0.2s;
+            text-transform: uppercase;
+        }
+        .btn-massive:active { transform: scale(0.98); }
+        
+        .btn-create { background: var(--accent-orange); color: white; box-shadow: 0 4px 20px rgba(255, 98, 0, 0.3); }
+        .btn-scan { background: var(--accent-green); color: #000; box-shadow: 0 4px 20px rgba(0, 255, 157, 0.3); }
+        
+        /* Secondary Buttons (In Generator) */
+        .btn-control {
+            flex: 1;
+            height: 48px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            background: var(--bg-surface);
+            border: 1px solid #333;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-control:active { background: #333; }
+        .btn-control:disabled { opacity: 0.3; pointer-events: none; }
+        
+        /* === 6. GENERATOR LAYOUT (The "Anti-Alice" Model) === */
+        .gen-layout {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            width: 100%;
         }
 
-        /* Inputs */
-        .input-industrial {
-            background: rgba(0,0,0,0.4);
-            border: 2px solid #444;
-            color: #fff;
-            transition: all 0.3s;
-            resize: none;
+        /* Zone 1: Sacred QR Area (Fixed at Top) */
+        .zone-sacred {
+            height: 40vh; /* Strict height requirement */
+            min-height: 280px;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            background: #000;
+            border-bottom: 1px solid #222;
+            cursor: pointer; /* Indicates tapability to close keyboard */
         }
-        .input-industrial:focus {
-            outline: none;
-            border-color: var(--brass);
-            background: rgba(0,0,0,0.6);
+
+        .qr-frame {
+            width: auto;
+            max-width: 100%;
+            max-height: 100%;
+            aspect-ratio: 1;
+            background: #111;
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Zone 2: Controls */
+        .zone-controls {
+            flex-shrink: 0;
+            padding: 12px 16px;
+            display: flex;
+            gap: 12px;
+            background: var(--bg-app);
+            border-bottom: 1px solid #222;
+        }
+
+        /* Zone 3: Input Area (Fills rest) */
+        .zone-input {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto; /* Scrollable content if needed */
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        /* === 7. INPUTS & SYNC LOGIC === */
+        .input-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .input-label {
+            font-size: 10px;
+            letter-spacing: 1px;
+            font-weight: 600;
+            text-transform: uppercase;
         }
         
-        /* Synced Textareas Height Fix */
-        .sync-textarea {
-            min-height: 80px;
-            max-height: 250px;
-            overflow-y: auto;
+        .sync-input {
+            width: 100%;
+            resize: none;
+            background: var(--bg-surface);
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 12px;
+            color: #fff;
+            font-size: 16px; /* CRITICAL: Prevents iOS zoom */
+            font-family: 'Inter', sans-serif;
+            line-height: 1.4;
+            outline: none;
+            transition: border-color 0.2s, height 0.1s;
+        }
+        .sync-input:focus { border-color: var(--accent-orange); }
+
+        /* Specific Channel Colors */
+        .ch-r { border-left: 3px solid var(--accent-orange); }
+        .ch-g { border-left: 3px solid var(--accent-green); }
+        .ch-b { border-left: 3px solid var(--accent-steel); }
+
+        /* === 8. CAMERA OVERLAY === */
+        #camera-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            z-index: 500;
+            background: #000;
+            display: none;
+            flex-direction: column;
+        }
+        #video-feed {
+            flex: 1;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .camera-hud {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 70%;
+            aspect-ratio: 1;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 16px;
+            box-shadow: 0 0 0 2000px rgba(0,0,0,0.6);
         }
 
-        /* Scanner Overlay */
-        .scanner-overlay {
-            position: absolute;
-            inset: 0;
-            border: 4px solid transparent;
-            pointer-events: none;
-            transition: border-color 0.2s;
-            z-index: 20;
+        /* === 9. ANIMATIONS === */
+        @keyframes flash-active {
+            0% { opacity: 0.3; transform: scale(0.95); }
+            50% { opacity: 1; transform: scale(1.02); box-shadow: 0 0 15px var(--accent-green); }
+            100% { opacity: 1; transform: scale(1); }
         }
-        .scanner-overlay.active {
-            border-color: var(--g-channel);
-            box-shadow: 0 0 20px var(--g-channel);
-        }
+        .flash-animation { animation: flash-active 0.3s ease-out; }
+
     </style>
 </head>
 <body>
 
-<div class="app-shell">
+<div id="app">
     
-    <!-- HEADER -->
-    <header class="metal-bg sticky top-0 z-50 flex items-center justify-between p-3 h-14">
-        <button id="btn-back" onclick="navBack()" class="w-10 h-10 flex items-center justify-center text-2xl text-zinc-400 hover:text-white transition hidden">
-            ←
-        </button>
-        <h1 id="page-title" class="font-tech text-xl text-zinc-100 tracking-wide absolute left-1/2 transform -translate-x-1/2">
-            SPECTRUM_QR
-        </h1>
-        <button id="btn-menu" onclick="toggleMenu()" class="w-10 h-10 flex items-center justify-center text-2xl text-zinc-400 hover:text-white transition">
-            ☰
-        </button>
+    <!-- HEADER (Persistent) -->
+    <header class="app-header">
+        <div id="header-left" class="w-12">
+            <!-- Back Arrow injected here by JS -->
+        </div>
+        <div id="header-title" class="header-title">Spectrum_qr</div>
+        <div id="header-right" class="w-12 flex justify-end">
+            <div class="header-btn" onclick="toggleMenu()">☰</div>
+        </div>
     </header>
 
-    <!-- BURGER MENU -->
-    <div id="menu-panel" class="fixed inset-0 bg-black/90 z-[60] hidden flex-col items-center justify-center gap-6 text-center">
-        <button onclick="navTo('history'); toggleMenu()" class="text-2xl font-tech text-zinc-300 hover:text-brass-light">HISTORY</button>
-        <button onclick="navTo('manual'); toggleMenu()" class="text-2xl font-tech text-zinc-300 hover:text-brass-light">MANUAL</button>
-        <button onclick="toggleMenu()" class="text-2xl font-tech text-zinc-500 mt-10">✕ CLOSE</button>
+    <!-- SCREEN A: LANDING -->
+    <div id="screen-landing" class="screen active">
+        <div class="flex-1 flex flex-col items-center justify-center p-8 gap-6">
+            <button class="btn-massive btn-create" onclick="navTo('selection')">
+                CREATE
+            </button>
+            <button class="btn-massive btn-scan" onclick="openCamera()">
+                SCAN <span>🔍</span>
+            </button>
+        </div>
     </div>
 
-    <!-- MAIN CONTENT CONTAINER -->
-    <main class="flex-1 overflow-hidden relative flex flex-col">
-
-        <!-- VIEW: LANDING -->
-        <div id="view-landing" class="view active p-6 flex flex-col items-center justify-center gap-8">
-            <button onclick="navTo('selection')" class="btn-industrial w-full max-w-xs py-8 rounded-xl bg-gradient-to-br from-orange-600 to-orange-800 font-tech text-2xl flex items-center justify-center gap-3">
-                <span class="text-3xl">+</span> CREATE
+    <!-- SCREEN B: SELECTION -->
+    <div id="screen-selection" class="screen">
+        <div class="flex-1 flex flex-col items-center justify-center p-8 gap-6">
+            <button class="btn-massive btn-create" style="background: #444; box-shadow: none;" onclick="navTo('generator', 'ornament')">
+                ORNAMENT QR
             </button>
-            <button onclick="startScanner()" class="btn-industrial w-full max-w-xs py-8 rounded-xl bg-gradient-to-br from-green-600 to-green-900 font-tech text-2xl flex items-center justify-center gap-3">
-                <span class="text-3xl">🔍</span> SCAN
+            <button class="btn-massive btn-create" style="background: #222; border: 2px solid var(--accent-orange);" onclick="navTo('generator', 'spectrum')">
+                3D SPECTRUM QR
             </button>
         </div>
+    </div>
 
-        <!-- VIEW: SELECTION -->
-        <div id="view-selection" class="view p-6 flex flex-col items-center justify-center gap-6">
-            <h2 class="font-tech text-lg text-zinc-400 mb-4">SELECT MODE</h2>
-            <button onclick="navTo('generator', 'ornament')" class="btn-industrial w-full max-w-xs py-6 rounded-xl border-2 border-zinc-600 bg-zinc-900 hover:bg-zinc-800 font-tech text-xl text-zinc-200">
-                QRNAMENT
-            </button>
-            <button onclick="navTo('generator', 'spectrum')" class="btn-industrial w-full max-w-xs py-6 rounded-xl border-2 border-zinc-600 bg-zinc-900 hover:bg-zinc-800 font-tech text-xl text-zinc-200">
-                3D-QR (SPECTRUM)
-            </button>
-        </div>
-
-        <!-- VIEW: GENERATOR -->
-        <div id="view-generator" class="view overflow-y-auto">
-            <div class="flex flex-col h-full">
-                <!-- Preview Area (Sticky Top) -->
-                <div class="sticky top-0 bg-steel-dark/95 backdrop-blur p-4 flex flex-col items-center border-b border-zinc-800 z-10" onclick="blurInputs()">
-                    <div id="preview-frame" class="w-56 h-56 bg-black p-1 rounded border-4 border-zinc-700 shadow-lg relative">
-                        <canvas id="canvas-main" width="1024" height="1024" class="w-full h-full"></canvas>
-                        <video id="scanner-video" class="absolute inset-0 w-full h-full object-cover hidden z-10" playsinline></video>
-                        <div id="scanner-overlay" class="scanner-overlay"></div>
-                    </div>
-                    <!-- Status Indicators -->
-                    <div id="stats-ornament" class="text-[10px] text-zinc-500 mt-2 font-mono hidden">
-                        MODE: ORNAMENT
-                    </div>
-                    <div id="stats-spectrum" class="text-[10px] text-zinc-500 mt-2 font-mono hidden">
-                        MATRIX: <span id="stat-matrix">-</span> | TRIAD-RGB
-                    </div>
+    <!-- SCREEN C: GENERATOR -->
+    <div id="screen-generator" class="screen">
+        <div class="gen-layout">
+            
+            <!-- Sacred Zone (Top) -->
+            <div class="zone-sacred" onclick="hideKeyboard()">
+                <div class="qr-frame">
+                    <canvas id="canvas-output" width="512" height="512" style="width: 100%; height: 100%; object-fit: contain;"></canvas>
                 </div>
-
-                <!-- Controls Container -->
-                <div class="flex-1 p-4 flex flex-col gap-4">
-                    
-                    <!-- ORNAMENT CONTROLS -->
-                    <div id="controls-ornament" class="hidden flex-col gap-4 h-full">
-                        <textarea id="input-ornament" 
-                            class="input-industrial w-full p-3 rounded font-data text-sm border-blue-500 h-24" 
-                            placeholder="Enter text for Ornament QR..."
-                            oninput="OrnamentEngine.generate()"></textarea>
-                        
-                        <div class="flex gap-3">
-                            <button onclick="OrnamentEngine.generate()" id="btn-ornament-random" class="btn-industrial flex-1 py-3 rounded bg-zinc-800 text-zinc-300 hidden font-tech text-sm">
-                                REGNERATE
-                            </button>
-                            <button onclick="saveImage()" id="btn-ornament-save" class="btn-industrial flex-1 py-3 rounded bg-blue-900 text-blue-100 hidden font-tech text-sm">
-                                SAVE
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- SPECTRUM CONTROLS -->
-                    <div id="controls-spectrum" class="hidden flex-col gap-3 h-full">
-                        <div class="flex flex-col gap-1">
-                            <label class="text-xs text-red-400 font-bold tracking-wider">RED CHANNEL</label>
-                            <textarea id="input-r" class="input-industrial w-full p-2 rounded font-data text-sm border-red-500 sync-textarea" oninput="SpectrumEngine.generate()"></textarea>
-                        </div>
-                        <div class="flex flex-col gap-1">
-                            <label class="text-xs text-green-400 font-bold tracking-wider">GREEN CHANNEL</label>
-                            <textarea id="input-g" class="input-industrial w-full p-2 rounded font-data text-sm border-green-500 sync-textarea" oninput="SpectrumEngine.generate()"></textarea>
-                        </div>
-                        <div class="flex flex-col gap-1">
-                            <label class="text-xs text-blue-400 font-bold tracking-wider">BLUE CHANNEL</label>
-                            <textarea id="input-b" class="input-industrial w-full p-2 rounded font-data text-sm border-blue-500 sync-textarea" oninput="SpectrumEngine.generate()"></textarea>
-                        </div>
-                        
-                        <button onclick="saveImage()" id="btn-spectrum-save" class="btn-industrial w-full py-3 rounded bg-blue-900 text-blue-100 hidden font-tech mt-2">
-                            SAVE RESULT
-                        </button>
-                    </div>
-
+                <div id="tech-stats" class="text-[10px] text-zinc-600 mt-2 tracking-widest">
+                    STANDBY | MATRIX: NULL
                 </div>
             </div>
-        </div>
 
-    </main>
+            <!-- Control Zone (Middle) -->
+            <div class="zone-controls">
+                <button id="btn-save" class="btn-control" onclick="saveImage()" disabled>SAVE</button>
+                <button id="btn-scan-mode" class="btn-control" onclick="openCamera()">SCAN</button>
+                <button id="btn-regen" class="btn-control hidden" onclick="regenerateOrnament()">REGENERATE</button>
+            </div>
+
+            <!-- Input Zone (Bottom) -->
+            <div class="zone-input">
+                
+                <!-- Ornament Mode Inputs -->
+                <div id="input-ornament" class="hidden flex-1">
+                    <textarea id="text-single" class="sync-input h-full w-full" placeholder="Enter data..." oninput="handleInput()"></textarea>
+                </div>
+
+                <!-- Spectrum Mode Inputs -->
+                <div id="input-spectrum" class="hidden flex-1 flex flex-col gap-3">
+                    <div class="input-wrapper flex-1">
+                        <span class="input-label text-red-400">RED CHANNEL</span>
+                        <textarea id="text-r" class="sync-input ch-r h-full" placeholder="Channel R..." oninput="handleInput()"></textarea>
+                    </div>
+                    <div class="input-wrapper flex-1">
+                        <span class="input-label text-green-400">GREEN CHANNEL</span>
+                        <textarea id="text-g" class="sync-input ch-g h-full" placeholder="Channel G..." oninput="handleInput()"></textarea>
+                    </div>
+                    <div class="input-wrapper flex-1">
+                        <span class="input-label text-blue-400">BLUE CHANNEL</span>
+                        <textarea id="text-b" class="sync-input ch-b h-full" placeholder="Channel B..." oninput="handleInput()"></textarea>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- CAMERA OVERLAY -->
+    <div id="camera-overlay">
+        <video id="video-feed" autoplay playsinline></video>
+        <div class="camera-hud"></div>
+        <button class="absolute top-4 left-4 text-white text-3xl z-10" onclick="closeCamera()">✕</button>
+        <canvas id="canvas-scan" class="hidden"></canvas>
+    </div>
+
+    <!-- MENU OVERLAY -->
+    <div id="menu-overlay" class="fixed inset-0 bg-black/95 z-[200] hidden flex-col items-center justify-center gap-8">
+        <a href="#" class="text-2xl font-bold text-zinc-300">History</a>
+        <a href="#" class="text-2xl font-bold text-zinc-300">Manual</a>
+        <a href="#" class="text-2xl font-bold text-zinc-300">Contacts</a>
+        <button onclick="toggleMenu()" class="mt-8 text-zinc-500">Close</button>
+    </div>
+
 </div>
 
 <script>
-    // === 1. SPRITE LIBRARY 7x7 (Integrated from provided code) ===
-    const SPRITE_LIB_7x7 = [
+    // === 1. STATE MANAGEMENT ===
+    const state = {
+        currentScreen: 'landing',
+        mode: null, // 'ornament' | 'spectrum'
+        seed: Math.random() 
+    };
+
+    // === 2. SPRITE LIBRARY (Mandala) ===
+    const SPRITE_LIB = [
         [73,42,28,127,28,42,73], [127,65,93,85,93,65,127], [85,62,99,42,99,62,85],
         [42,119,34,73,34,119,42], [28,42,73,119,73,42,28], [0,62,34,42,46,32,63],
         [15,1,29,5,52,16,64], [64,96,112,120,112,96,64], [76,102,51,25,51,102,76],
@@ -276,373 +401,368 @@
         [0,63,32,62,2,126,0], [64,95,81,93,69,125,1], [51,51,102,102,76,76,25]
     ];
 
-    // === 2. STATE & NAVIGATION ===
-    const historyStack = [];
-    const state = { view: 'landing', mode: null };
-    
-    const DOM = {
-        title: document.getElementById('page-title'),
-        backBtn: document.getElementById('btn-back'),
-        menuPanel: document.getElementById('menu-panel'),
-        // Canvases & Video
-        canvas: document.getElementById('canvas-main'),
-        video: document.getElementById('scanner-video'),
-        scannerOverlay: document.getElementById('scanner-overlay'),
-        // Containers
-        statsOrnament: document.getElementById('stats-ornament'),
-        statsSpectrum: document.getElementById('stats-spectrum'),
-        statMatrix: document.getElementById('stat-matrix'),
-        controlsOrnament: document.getElementById('controls-ornament'),
-        controlsSpectrum: document.getElementById('controls-spectrum'),
-        // Inputs
-        iOrnament: document.getElementById('input-ornament'),
-        iR: document.getElementById('input-r'),
-        iG: document.getElementById('input-g'),
-        iB: document.getElementById('input-b'),
-        // Buttons
-        btnOrnamentRandom: document.getElementById('btn-ornament-random'),
-        btnOrnamentSave: document.getElementById('btn-ornament-save'),
-        btnSpectrumSave: document.getElementById('btn-spectrum-save')
+    // === 3. DOM REFS ===
+    const els = {
+        app: document.getElementById('app'),
+        screens: {
+            landing: document.getElementById('screen-landing'),
+            selection: document.getElementById('screen-selection'),
+            generator: document.getElementById('screen-generator')
+        },
+        header: { left: document.getElementById('header-left'), title: document.getElementById('header-title') },
+        inputs: {
+            ornament: document.getElementById('input-ornament'),
+            spectrum: document.getElementById('input-spectrum'),
+            single: document.getElementById('text-single'),
+            r: document.getElementById('text-r'), g: document.getElementById('text-g'), b: document.getElementById('text-b')
+        },
+        canvas: document.getElementById('canvas-output'),
+        btnSave: document.getElementById('btn-save'),
+        btnRegen: document.getElementById('btn-regen'),
+        stats: document.getElementById('tech-stats'),
+        cameraOverlay: document.getElementById('camera-overlay'),
+        video: document.getElementById('video-feed'),
+        scanCanvas: document.getElementById('canvas-scan')
     };
 
-    function navTo(viewId, mode = null) {
-        historyStack.push(state.view);
-        updateView(viewId, mode);
-    }
-
-    function navBack() {
-        if (historyStack.length > 0) {
-            const prevView = historyStack.pop();
-            updateView(prevView);
-        }
-    }
-
-    function updateView(viewId, mode = null) {
-        // Stop scanner if running
-        if (viewId !== 'scanner') stopScanner();
-
-        // Update State
-        state.view = viewId;
-        if(mode) state.mode = mode;
-
-        // Update DOM Visibility
-        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-        const target = document.getElementById(`view-${viewId}`);
-        if(target) target.classList.add('active');
+    // === 4. NAVIGATION ENGINE ===
+    function navTo(screenId, mode = null) {
+        // Hide all
+        Object.values(els.screens).forEach(s => s.classList.remove('active'));
+        
+        // Set target
+        els.screens[screenId].classList.add('active');
+        state.currentScreen = screenId;
 
         // Header Logic
-        DOM.backBtn.classList.toggle('hidden', viewId === 'landing');
-        
-        // Titles
-        const titles = {
-            landing: 'SPECTRUM_QR',
-            selection: 'CREATE',
-            generator: state.mode === 'ornament' ? 'QRNAMENT' : '3D-QR'
-        };
-        DOM.title.textContent = titles[viewId];
-
-        // Generator Mode Setup
-        if (viewId === 'generator') {
-            setupGeneratorMode(state.mode);
+        if (screenId === 'landing') {
+            els.header.left.innerHTML = '';
+            els.header.title.textContent = 'Spectrum_qr';
+        } else if (screenId === 'selection') {
+            els.header.left.innerHTML = '<div class="header-btn" onclick="navTo(\'landing\')">←</div>';
+            els.header.title.textContent = 'Select Mode';
+        } else if (screenId === 'generator') {
+            els.header.left.innerHTML = '<div class="header-btn" onclick="navTo(\'selection\')">←</div>';
+            
+            // Mode Logic
+            state.mode = mode;
+            setupGeneratorMode(mode);
         }
     }
 
     function setupGeneratorMode(mode) {
-        DOM.controlsOrnament.classList.add('hidden');
-        DOM.controlsSpectrum.classList.add('hidden');
-        DOM.statsOrnament.classList.add('hidden');
-        DOM.statsSpectrum.classList.add('hidden');
+        // Reset UI
+        els.inputs.ornament.classList.add('hidden');
+        els.inputs.spectrum.classList.add('hidden');
+        els.btnRegen.classList.add('hidden');
+        els.btnSave.disabled = true;
+        els.btnSave.style.opacity = '0.3';
+        
+        clearCanvas();
 
         if (mode === 'ornament') {
-            DOM.controlsOrnament.classList.remove('hidden');
-            DOM.controlsOrnament.classList.add('flex');
-            DOM.statsOrnament.classList.remove('hidden');
-            // Clear or Init
-            OrnamentEngine.generate();
-        } else if (mode === 'spectrum') {
-            DOM.controlsSpectrum.classList.remove('hidden');
-            DOM.controlsSpectrum.classList.add('flex');
-            DOM.statsSpectrum.classList.remove('hidden');
-            SpectrumEngine.generate();
+            els.header.title.textContent = 'QRnament';
+            els.inputs.ornament.classList.remove('hidden');
+            els.inputs.ornament.classList.add('flex'); // Flex container
+            els.btnRegen.classList.remove('hidden');
+        } else {
+            els.header.title.textContent = 'Spectrum_qr';
+            els.inputs.spectrum.classList.remove('hidden');
+            els.inputs.spectrum.classList.add('flex');
+            syncInputHeight(); // Initial sync
         }
     }
 
     function toggleMenu() {
-        DOM.menuPanel.classList.toggle('hidden');
-        DOM.menuPanel.classList.toggle('flex');
+        document.getElementById('menu-overlay').classList.toggle('hidden');
+        document.getElementById('menu-overlay').classList.toggle('flex');
     }
 
-    function blurInputs() {
+    // === 5. INPUT HANDLING & SYNCHRONIZATION ===
+    function handleInput() {
+        if (state.mode === 'ornament') {
+            const val = els.inputs.single.value;
+            if (val.length > 0) {
+                els.btnSave.disabled = false;
+                els.btnSave.style.opacity = '1';
+                generateOrnament();
+            } else {
+                els.btnSave.disabled = true;
+                els.btnSave.style.opacity = '0.3';
+                clearCanvas();
+            }
+            els.stats.innerText = `TEXT: ${val.length} CHARS`;
+        } else {
+            syncInputHeight(); // Keep heights aligned
+            checkSpectrumValidity();
+            generateSpectrum();
+        }
+    }
+
+    // Synchronizes height of R, G, B textareas
+    function syncInputHeight() {
+        // Reset heights to auto to measure true scrollHeight
+        const inputs = [els.inputs.r, els.inputs.g, els.inputs.b];
+        inputs.forEach(i => i.style.height = 'auto');
+        
+        // Find max height
+        const maxH = Math.max(...inputs.map(i => i.scrollHeight));
+        
+        // Apply max height to all
+        inputs.forEach(i => i.style.height = maxH + 'px');
+    }
+
+    function checkSpectrumValidity() {
+        const r = els.inputs.r.value.trim();
+        const g = els.inputs.g.value.trim();
+        const b = els.inputs.b.value.trim();
+        
+        const isValid = r.length > 0 && g.length > 0 && b.length > 0;
+
+        if (isValid) {
+            if (els.btnSave.disabled) {
+                // Trigger flash animation
+                els.btnSave.classList.add('flash-animation');
+                setTimeout(() => els.btnSave.classList.remove('flash-animation'), 300);
+            }
+            els.btnSave.disabled = false;
+            els.btnSave.style.opacity = '1';
+        } else {
+            els.btnSave.disabled = true;
+            els.btnSave.style.opacity = '0.3';
+        }
+    }
+
+    function hideKeyboard() {
         document.activeElement.blur();
     }
 
-    // === 3. ENGINES ===
+    // === 6. QR GENERATION ENGINES ===
 
-    // --- ORNAMENT ENGINE (Integrated) ---
-    const OrnamentEngine = {
-        generate() {
-            const text = DOM.iOrnament.value;
+    function clearCanvas() {
+        const ctx = els.canvas.getContext('2d');
+        ctx.fillStyle = "#000000";
+        ctx.fillRect(0, 0, 512, 512);
+    }
+
+    // --- ORNAMENT ENGINE (Seeded Random) ---
+    function generateOrnament() {
+        const text = els.inputs.single.value;
+        if (!text) return;
+
+        try {
+            const qr = qrcode(0, 'M');
+            qr.addData(unescape(encodeURIComponent(text)));
+            qr.make();
             
-            // UI Logic: Show buttons if text exists
-            if (text) {
-                DOM.btnOrnamentRandom.classList.remove('hidden');
-                DOM.btnOrnamentSave.classList.remove('hidden');
-            } else {
-                DOM.btnOrnamentRandom.classList.add('hidden');
-                DOM.btnOrnamentSave.classList.add('hidden');
+            const modCount = qr.getModuleCount();
+            const quietZone = 4;
+            const totalSize = modCount + quietZone * 2;
+            const cellSize = 512 / totalSize;
+
+            const ctx = els.canvas.getContext('2d');
+            ctx.fillStyle = "#000";
+            ctx.fillRect(0, 0, 512, 512);
+
+            // Generate Grids
+            const gridR = buildGrid(totalSize);
+            const gridG = buildGrid(totalSize);
+
+            // Draw Layers (Screen blend)
+            ctx.globalCompositeOperation = "screen";
+            
+            ctx.fillStyle = "#FF0000";
+            drawGrid(ctx, gridR, totalSize, cellSize);
+            
+            ctx.fillStyle = "#00FF00";
+            drawGrid(ctx, gridG, totalSize, cellSize);
+            
+            // Draw Blue Channel (Data)
+            ctx.fillStyle = "#0000FF";
+            for(let r=0; r<modCount; r++) {
+                for(let c=0; c<modCount; c++) {
+                    if(qr.isDark(r, c)) {
+                        ctx.fillRect((c+quietZone)*cellSize, (r+quietZone)*cellSize, cellSize, cellSize);
+                    }
+                }
             }
 
-            if (!text) return this.clearCanvas();
+            ctx.globalCompositeOperation = "source-over";
 
+        } catch(e) { console.error(e); }
+    }
+
+    function regenerateOrnament() {
+        state.seed = Math.random(); // Change seed
+        generateOrnament();
+    }
+
+    // Seeded Random helper
+    function seededRandom() {
+        let x = Math.sin(state.seed++) * 10000;
+        return x - Math.floor(x);
+    }
+
+    function buildGrid(size) {
+        const grid = Array(size).fill(0).map(() => Array(size).fill(0));
+        const center = Math.floor(size/2);
+        const maxBlocks = Math.ceil((size/2 + 7)/7);
+        const octantMap = new Map();
+
+        for(let by=0; by<maxBlocks; by++) {
+            for(let bx=by; bx<maxBlocks; bx++) {
+                const patternIdx = Math.floor(seededRandom() * SPRITE_LIB.length);
+                const pattern = SPRITE_LIB[patternIdx];
+                const flipX = seededRandom() > 0.5;
+                const flipY = seededRandom() > 0.5;
+
+                for(let py=0; py<7; py++) {
+                    for(let px=0; px<7; px++) {
+                        let sX = flipX ? (6-px) : px;
+                        let sY = flipY ? (6-py) : py;
+                        
+                        if((pattern[sY] >> (6-sX)) & 1) {
+                            let xRel = (bx*7) + px - 3;
+                            let yRel = (by*7) + py - 3;
+                            
+                            if(xRel >= yRel && yRel >= 0) {
+                                octantMap.set(`${xRel},${yRel}`, true);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Apply Symmetry
+        octantMap.forEach((v, k) => {
+            const [x, y] = k.split(',').map(Number);
+            const points = [
+                [x, y], [y, x], [-x, y], [-y, x],
+                [x, -y], [y, -x], [-x, -y], [-y, -x]
+            ];
+            points.forEach(([px, py]) => {
+                const aX = center + px;
+                const aY = center + py;
+                if(aX >= 0 && aX < size && aY >= 0 && aY < size) grid[aY][aX] = 1;
+            });
+        });
+
+        return grid;
+    }
+
+    function drawGrid(ctx, grid, size, cell) {
+        for(let r=0; r<size; r++) {
+            for(let c=0; c<size; c++) {
+                if(grid[r][c]) ctx.fillRect(c*cell, r*cell, cell+0.5, cell+0.5);
+            }
+        }
+    }
+
+    // --- SPECTRUM ENGINE ---
+    function generateSpectrum() {
+        const rText = els.inputs.r.value.trim();
+        const gText = els.inputs.g.value.trim();
+        const bText = els.inputs.b.value.trim();
+
+        const ctx = els.canvas.getContext('2d');
+        ctx.fillStyle = "#000";
+        ctx.fillRect(0, 0, 512, 512);
+
+        if(!rText && !gText && !bText) return;
+
+        // Determine Max Version
+        let maxVer = 1;
+        [rText, gText, bText].forEach(t => {
+            if(!t) return;
             try {
-                const utf8Text = unescape(encodeURIComponent(text));
-                const qr = qrcode(0, 'M');
-                qr.addData(utf8Text);
+                const tmp = qrcode(0, 'M');
+                tmp.addData(unescape(encodeURIComponent(t)));
+                tmp.make();
+                const v = Math.floor((tmp.getModuleCount() - 17) / 4);
+                if(v > maxVer) maxVer = v;
+            } catch(e) {}
+        });
+
+        const matrixSize = (maxVer*4)+17;
+        els.stats.innerText = `RGB_MODE: ACTIVE | MATRIX: ${matrixSize}x${matrixSize}`;
+
+        ctx.globalCompositeOperation = "lighten";
+        
+        const colors = ["#FF0000", "#00FF00", "#0000FF"];
+        const texts = [rText, gText, bText];
+
+        texts.forEach((text, i) => {
+            if(!text) return;
+            try {
+                const qr = qrcode(maxVer, 'M');
+                qr.addData(unescape(encodeURIComponent(text)));
                 qr.make();
                 
-                const moduleCount = qr.getModuleCount();
-                const quietZone = 4;
-                const totalModules = moduleCount + quietZone * 2;
-                const modSize = 1024 / totalModules;
+                const mod = 512 / qr.getModuleCount();
+                ctx.fillStyle = colors[i];
                 
-                const gridR = this.build7x7Grid(totalModules);
-                const gridG = this.build7x7Grid(totalModules);
-                
-                const ctx = DOM.canvas.getContext('2d');
-                ctx.globalCompositeOperation = "source-over";
-                ctx.fillStyle = "#000000";
-                ctx.fillRect(0, 0, 1024, 1024);
-
-                ctx.globalCompositeOperation = "screen";
-
-                ctx.fillStyle = "#FF0000";
-                this.drawGrid(ctx, gridR, totalModules, modSize);
-                
-                ctx.fillStyle = "#00FF00";
-                this.drawGrid(ctx, gridG, totalModules, modSize);
-
-                ctx.fillStyle = "#0000FF";
-                for (let r = 0; r < moduleCount; r++) {
-                    for (let c = 0; c < moduleCount; c++) {
-                        if (qr.isDark(r, c)) {
-                            ctx.fillRect((c + quietZone) * modSize, (r + quietZone) * modSize, modSize, modSize);
-                        }
+                for (let r = 0; r < qr.getModuleCount(); r++) {
+                    for (let c = 0; c < qr.getModuleCount(); c++) {
+                        if (qr.isDark(r, c)) ctx.fillRect(c * mod, r * mod, mod, mod);
                     }
                 }
+            } catch(e) {}
+        });
+        
+        ctx.globalCompositeOperation = "source-over";
+    }
 
-                ctx.globalCompositeOperation = "source-over";
-            } catch (e) { console.error(e); }
-        },
+    // === 7. CAMERA & SCANNING ===
+    let stream = null;
 
-        build7x7Grid(size) {
-            const grid = Array(size).fill(0).map(() => Array(size).fill(0));
-            const center = Math.floor(size / 2);
-            const octantMap = new Map();
-            const maxBlocks = Math.ceil((size / 2 + 7) / 7); 
-
-            for (let by = 0; by < maxBlocks; by++) {
-                for (let bx = by; bx < maxBlocks; bx++) {
-                    const patternIdx = Math.floor(Math.random() * SPRITE_LIB_7x7.length);
-                    const pattern = SPRITE_LIB_7x7[patternIdx];
-                    const flipX = Math.random() > 0.5;
-                    const flipY = Math.random() > 0.5;
-
-                    for (let py = 0; py < 7; py++) {
-                        for (let px = 0; px < 7; px++) {
-                            let sX = flipX ? (6 - px) : px;
-                            let sY = flipY ? (6 - py) : py;
-                            
-                            if ((pattern[sY] >> (6 - sX)) & 1) {
-                                let xRel = (bx * 7) + px - 3;
-                                let yRel = (by * 7) + py - 3;
-
-                                if (xRel >= yRel && yRel >= 0) {
-                                    octantMap.set(`${xRel},${yRel}`, true);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            octantMap.forEach((val, key) => {
-                const [xStr, yStr] = key.split(',');
-                const x = parseInt(xStr);
-                const y = parseInt(yStr);
-                
-                const points = [
-                    [ x,  y], [ y,  x], [-x,  y], [-y,  x],
-                    [ x, -y], [ y, -x], [-x, -y], [-y, -x]
-                ];
-
-                points.forEach(([px, py]) => {
-                    const absX = center + px;
-                    const absY = center + py;
-                    
-                    if (absX >= 0 && absX < size && absY >= 0 && absY < size) {
-                        grid[absY][absX] = 1;
-                    }
-                });
-            });
-
-            return grid;
-        },
-
-        drawGrid(ctx, grid, size, cellSize) {
-            for(let r=0; r<size; r++) {
-                for(let c=0; c<size; c++) {
-                    if(grid[r][c]) {
-                        ctx.fillRect(c * cellSize, r * cellSize, cellSize + 0.5, cellSize + 0.5);
-                    }
-                }
-            }
-        },
-
-        clearCanvas() {
-            const ctx = DOM.canvas.getContext('2d');
-            ctx.fillStyle = "#000";
-            ctx.fillRect(0, 0, 1024, 1024);
-        }
-    };
-
-    // --- SPECTRUM ENGINE (3D-QR) ---
-    const SpectrumEngine = {
-        generate() {
-            const rText = DOM.iR.value;
-            const gText = DOM.iG.value;
-            const bText = DOM.iB.value;
-            
-            const ctx = DOM.canvas.getContext('2d');
-            ctx.fillStyle = "#000";
-            ctx.fillRect(0, 0, 1024, 1024);
-
-            // Logic: Show Save ONLY if all 3 filled
-            if (rText && gText && bText) {
-                DOM.btnSpectrumSave.classList.remove('hidden');
-            } else {
-                DOM.btnSpectrumSave.classList.add('hidden');
-            }
-
-            if (!rText && !gText && !bText) {
-                DOM.statMatrix.textContent = "-";
-                return;
-            }
-
-            let maxVer = 1;
-            [rText, gText, bText].forEach(t => {
-                if(!t) return;
-                const tmp = qrcode(0, 'M');
-                try {
-                    tmp.addData(unescape(encodeURIComponent(t)));
-                    tmp.make();
-                    const v = Math.floor((tmp.getModuleCount() - 17) / 4);
-                    if (v > maxVer) maxVer = v;
-                } catch(e) {}
-            });
-
-            DOM.statMatrix.textContent = `${(maxVer*4)+17}x${(maxVer*4)+17}`;
-
-            // Draw Layers
-            ctx.globalCompositeOperation = "lighten";
-            
-            const colors = ["#FF0000", "#00FF00", "#0000FF"];
-            const texts = [rText, gText, bText];
-
-            texts.forEach((text, i) => {
-                if(!text) return;
-                try {
-                    const qr = qrcode(maxVer, 'M');
-                    qr.addData(unescape(encodeURIComponent(text)));
-                    qr.make();
-                    
-                    const mod = 1024 / qr.getModuleCount();
-                    ctx.fillStyle = colors[i];
-                    
-                    for (let r = 0; r < qr.getModuleCount(); r++) {
-                        for (let c = 0; c < qr.getModuleCount(); c++) {
-                            if (qr.isDark(r, c)) {
-                                ctx.fillRect(c * mod, r * mod, mod, mod);
-                            }
-                        }
-                    }
-                } catch(e) { console.error("QR Gen Error", e); }
-            });
-            
-            ctx.globalCompositeOperation = "source-over";
-        }
-    };
-
-    // --- SCANNER ENGINE ---
-    let scanning = false;
-
-    async function startScanner() {
+    async function openCamera() {
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-            DOM.video.srcObject = stream;
-            DOM.video.classList.remove('hidden');
-            DOM.video.play();
-            
-            // Adjust UI
-            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-            document.getElementById('view-generator').classList.add('active');
-            DOM.backBtn.classList.remove('hidden');
-            DOM.title.textContent = 'SCANNER';
-            
-            DOM.controlsOrnament.classList.add('hidden');
-            DOM.controlsSpectrum.classList.add('hidden');
-            
-            scanning = true;
-            requestAnimationFrame(scannerLoop);
-        } catch(e) { alert("Camera Access Denied"); }
-    }
-
-    function stopScanner() {
-        scanning = false;
-        if(DOM.video.srcObject) DOM.video.srcObject.getTracks().forEach(t => t.stop());
-        DOM.video.classList.add('hidden');
-        DOM.scannerOverlay.classList.remove('active');
-    }
-
-    function scannerLoop() {
-        if (!scanning) return;
-        if (DOM.video.readyState === DOM.video.HAVE_ENOUGH_DATA) {
-            const cv = document.createElement('canvas');
-            cv.width = 1024; cv.height = 1024;
-            const ctx = cv.getContext('2d', { willReadFrequently: true });
-            
-            const vw = DOM.video.videoWidth, vh = DOM.video.videoHeight;
-            const size = Math.min(vw, vh);
-            ctx.drawImage(DOM.video, (vw-size)/2, (vh-size)/2, size, size, 0, 0, 1024, 1024);
-
-            const imageData = ctx.getImageData(0, 0, 1024, 1024);
-            // Basic grayscale for jsQR
-            const data = imageData.data;
-            for (let i = 0; i < data.length; i += 4) {
-                const avg = (data[i] + data[i+1] + data[i+2]) / 3;
-                data[i] = avg; data[i+1] = avg; data[i+2] = avg;
-            }
-
-            const code = jsQR(data, 1024, 1024, { inversionAttempts: "attemptBoth" });
-            
-            if (code) {
-                DOM.scannerOverlay.classList.add('active');
-                // For now, just log it. A full implementation would switch modes/fill inputs.
-                console.log("QR Found", code.data);
-                // Stop and go back or fill input
-                stopScanner();
-                // Auto-fill Ornament input for demo
-                DOM.iOrnament.value = code.data;
-                navTo('generator', 'ornament');
-            }
+            stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+            els.video.srcObject = stream;
+            els.cameraOverlay.style.display = 'flex';
+            requestAnimationFrame(scanFrame);
+        } catch(e) {
+            alert("Camera permission denied.");
         }
-        requestAnimationFrame(scannerLoop);
     }
 
-    // === UTILITIES ===
+    function closeCamera() {
+        if(stream) stream.getTracks().forEach(t => t.stop());
+        els.cameraOverlay.style.display = 'none';
+    }
+
+    function scanFrame() {
+        if(els.cameraOverlay.style.display === 'none') return;
+        
+        if(els.video.readyState === els.video.HAVE_ENOUGH_DATA) {
+            const w = els.video.videoWidth, h = els.video.videoHeight;
+            els.scanCanvas.width = w; els.scanCanvas.height = h;
+            const ctx = els.scanCanvas.getContext('2d');
+            ctx.drawImage(els.video, 0, 0, w, h);
+            
+            const data = ctx.getImageData(0, 0, w, h);
+            const code = jsQR(data.data, w, h);
+            
+            if(code) {
+                // Success! Feed data to inputs
+                closeCamera();
+                navTo('generator', 'ornament');
+                els.inputs.single.value = code.data;
+                handleInput();
+            } else {
+                requestAnimationFrame(scanFrame);
+            }
+        } else {
+            requestAnimationFrame(scanFrame);
+        }
+    }
+
+    // === 8. UTILS ===
     function saveImage() {
         const link = document.createElement('a');
-        link.download = `SpectrumQR_${Date.now()}.png`;
-        link.href = DOM.canvas.toDataURL();
+        link.download = `spectrum_${Date.now()}.png`;
+        link.href = els.canvas.toDataURL();
         link.click();
     }
 
