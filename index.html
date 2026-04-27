@@ -2,33 +2,25 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <!-- CRITICAL: Prevent zoom on input focus (iOS) -->
+    <!-- Mobile-first viewport settings -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Spectrum_qr</title>
+    <title>QRnament</title>
     
-    <!-- Libraries -->
+    <!-- Dependencies -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
     
-    <!-- Fonts: Orbitron (Tech) & Inter (UI) -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 
     <style>
-        /* === 1. GLOBAL RESET & VARIABLES === */
         :root {
-            --bg-app: #121212;
-            --bg-surface: #1E1E1E;
-            --text-primary: #FFFFFF;
-            --text-secondary: #888888;
-            --accent-orange: #FF6200;
-            --accent-green: #00FF9D;
-            --accent-brass: #B8860B; /* Old Brass */
-            --accent-steel: #2F4F4F; /* Gunmetal */
-            
-            --safe-area-top: env(safe-area-inset-top);
-            --safe-area-bottom: env(safe-area-inset-bottom);
+            --primary-orange: #FF6200;
+            --primary-green: #00FF9D;
+            --r-color: #FF004D; --g-color: #00FF41; --b-color: #0088FF;
+            --bg-dark: #050505;
+            --ui-passive: rgba(255,255,255,0.3);
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -37,164 +29,195 @@
             margin: 0; padding: 0;
             height: 100%;
             width: 100%;
-            overflow: hidden; /* Disable scroll bounce */
-            background-color: var(--bg-app);
+            overflow: hidden; /* Prevent scroll bounce */
+            background-color: var(--bg-dark);
             font-family: 'Inter', sans-serif;
-            color: var(--text-primary);
+            color: #fff;
         }
 
-        /* === 2. APP SHELL (SPA CONTAINER) === */
+        /* === APP SHELL === */
         #app {
             height: 100%;
             width: 100%;
             display: flex;
             flex-direction: column;
             position: relative;
-            padding-top: var(--safe-area-top);
-            padding-bottom: var(--safe-area-bottom);
         }
 
-        /* === 3. HEADER COMPONENT === */
+        /* === FIXED TOP NAV === */
         .app-header {
             height: 56px;
             min-height: 56px;
+            width: 100%;
             display: flex;
             align-items: center;
             justify-content: space-between;
             padding: 0 16px;
-            background: rgba(18, 18, 18, 0.95);
+            background: rgba(5,5,5,0.9);
             backdrop-filter: blur(10px);
-            border-bottom: 1px solid #333;
             z-index: 100;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
         }
-
         .header-title {
-            font-family: 'Orbitron', sans-serif;
-            font-weight: 700;
-            font-size: 1.1rem;
+            font-size: 18px;
+            font-weight: 800;
             letter-spacing: 1px;
-            text-transform: uppercase;
-            transition: opacity 0.3s;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
         }
-
         .header-btn {
-            width: 48px;
-            height: 48px;
+            width: 40px;
+            height: 40px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
+            font-size: 20px;
             color: #fff;
             cursor: pointer;
-        }
-        .header-btn:active { opacity: 0.7; }
-
-        /* === 4. SCREENS MANAGEMENT === */
-        .screen {
-            flex: 1;
-            display: none; /* Hidden by default */
-            flex-direction: column;
-            height: 100%;
-            overflow: hidden;
-        }
-        .screen.active { display: flex; }
-
-        /* === 5. BUTTONS (Massive & Touch Friendly) === */
-        .btn-massive {
-            width: 100%;
-            min-height: 72px;
+            background: rgba(255,255,255,0.1);
             border-radius: 12px;
-            font-family: 'Orbitron', sans-serif;
-            font-weight: 700;
-            font-size: 1.2rem;
-            letter-spacing: 2px;
+        }
+        .header-btn.hidden { visibility: hidden; }
+
+        /* === SCREENS CONTAINER === */
+        .screen-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .screen {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: var(--bg-dark);
+            display: none;
+            flex-direction: column;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+        .screen.active {
+            display: flex;
+            opacity: 1;
+            z-index: 10;
+        }
+
+        /* === MAIN SCREEN === */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            text-align: center;
+        }
+        .main-desc {
+            font-size: 14px;
+            color: #aaa;
+            margin-bottom: 40px;
+            max-width: 280px;
+        }
+        .btn-row {
+            display: flex;
+            gap: 16px;
+            width: 100%;
+            max-width: 320px;
+        }
+        .btn-main {
+            flex: 1;
+            padding: 16px;
+            border-radius: 16px;
+            font-weight: 800;
+            font-size: 16px;
             border: none;
+            text-transform: uppercase;
+            cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 12px;
-            cursor: pointer;
-            transition: transform 0.1s, box-shadow 0.2s;
-            text-transform: uppercase;
+            gap: 8px;
+            transition: transform 0.1s;
         }
-        .btn-massive:active { transform: scale(0.98); }
-        
-        .btn-create { background: var(--accent-orange); color: white; box-shadow: 0 4px 20px rgba(255, 98, 0, 0.3); }
-        .btn-scan { background: var(--accent-green); color: #000; box-shadow: 0 4px 20px rgba(0, 255, 157, 0.3); }
-        
-        /* Secondary Buttons (In Generator) */
-        .btn-control {
-            flex: 1;
-            height: 48px;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 0.85rem;
-            background: var(--bg-surface);
-            border: 1px solid #333;
-            color: #fff;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .btn-control:active { background: #333; }
-        .btn-control:disabled { opacity: 0.3; pointer-events: none; }
-        
-        /* === 6. GENERATOR LAYOUT (The "Anti-Alice" Model) === */
+        .btn-main:active { transform: scale(0.95); }
+        .btn-create { background: var(--primary-orange); color: #fff; }
+        .btn-scan { background: var(--primary-green); color: #000; }
+
+        /* === GENERATOR LAYOUT (Keyboard Friendly) === */
         .gen-layout {
+            flex: 1;
             display: flex;
             flex-direction: column;
             height: 100%;
-            width: 100%;
+            position: relative;
         }
 
-        /* Zone 1: Sacred QR Area (Fixed at Top) */
+        /* Sacred Zone: Stays at top, never overlapped by keyboard */
         .zone-sacred {
-            height: 40vh; /* Strict height requirement */
-            min-height: 280px;
             flex-shrink: 0;
+            height: 35vh; /* Fixed height ensures visibility */
+            min-height: 200px;
+            padding: 16px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 16px;
-            background: #000;
-            border-bottom: 1px solid #222;
-            cursor: pointer; /* Indicates tapability to close keyboard */
+            cursor: pointer; /* Hint to tap to hide keyboard */
         }
-
         .qr-frame {
-            width: auto;
-            max-width: 100%;
-            max-height: 100%;
+            width: 100%;
+            max-width: 256px;
             aspect-ratio: 1;
             background: #111;
+            border-radius: 16px;
             box-shadow: 0 0 30px rgba(0,0,0,0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+        .qr-frame canvas {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
         }
 
-        /* Zone 2: Controls */
+        /* Controls */
         .zone-controls {
             flex-shrink: 0;
-            padding: 12px 16px;
+            padding: 8px 16px;
             display: flex;
-            gap: 12px;
-            background: var(--bg-app);
-            border-bottom: 1px solid #222;
+            gap: 8px;
+            background: rgba(0,0,0,0.2);
         }
+        .btn-ctrl {
+            flex: 1;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            border: 1px solid #333;
+            background: #1a1a1a;
+            color: #fff;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn-ctrl:active { background: #333; }
+        .btn-ctrl:disabled { opacity: 0.3; pointer-events: none; }
+        .btn-undo { color: var(--primary-orange); border-color: var(--primary-orange); }
 
-        /* Zone 3: Input Area (Fills rest) */
+        /* Inputs Zone: Takes remaining space */
         .zone-input {
             flex: 1;
             padding: 16px;
-            overflow-y: auto; /* Scrollable content if needed */
             display: flex;
             flex-direction: column;
             gap: 12px;
+            overflow-y: auto;
+            padding-bottom: 40px; /* Safe area */
         }
 
-        /* === 7. INPUTS & SYNC LOGIC === */
-        .input-wrapper {
+        .input-group {
             display: flex;
             flex-direction: column;
             gap: 4px;
@@ -202,33 +225,30 @@
         .input-label {
             font-size: 10px;
             letter-spacing: 1px;
-            font-weight: 600;
             text-transform: uppercase;
+            color: #666;
+            font-weight: 600;
         }
-        
-        .sync-input {
+        .text-input {
             width: 100%;
-            resize: none;
-            background: var(--bg-surface);
+            background: #111;
             border: 1px solid #333;
             border-radius: 8px;
             padding: 12px;
             color: #fff;
-            font-size: 16px; /* CRITICAL: Prevents iOS zoom */
-            font-family: 'Inter', sans-serif;
-            line-height: 1.4;
+            font-size: 16px; /* Prevents iOS zoom */
             outline: none;
-            transition: border-color 0.2s, height 0.1s;
+            resize: none;
+            transition: border-color 0.2s;
+            font-family: 'Inter', sans-serif;
         }
-        .sync-input:focus { border-color: var(--accent-orange); }
+        .text-input:focus { border-color: var(--primary-orange); }
+        
+        /* Sync Height Logic for 3D Mode */
+        .sync-input { height: 60px; } /* Base height, adjusted by JS */
 
-        /* Specific Channel Colors */
-        .ch-r { border-left: 3px solid var(--accent-orange); }
-        .ch-g { border-left: 3px solid var(--accent-green); }
-        .ch-b { border-left: 3px solid var(--accent-steel); }
-
-        /* === 8. CAMERA OVERLAY === */
-        #camera-overlay {
+        /* === SCANNER OVERLAY (From QRGB-13) === */
+        #scanner-overlay {
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
             z-index: 500;
@@ -236,30 +256,72 @@
             display: none;
             flex-direction: column;
         }
-        #video-feed {
+        
+        .scan-viewport {
             flex: 1;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
+            position: relative;
+            overflow: hidden;
         }
-        .camera-hud {
+        #video-feed { width: 100%; height: 100%; object-fit: cover; }
+        #freeze-frame { display: none; position: absolute; width: 100%; height: 100%; object-fit: contain; }
+        
+        .overlay-layer {
             position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            width: 70%;
-            aspect-ratio: 1;
-            border: 2px solid rgba(255,255,255,0.3);
-            border-radius: 16px;
-            box-shadow: 0 0 0 2000px rgba(0,0,0,0.6);
+            inset: 0;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-
-        /* === 9. ANIMATIONS === */
-        @keyframes flash-active {
-            0% { opacity: 0.3; transform: scale(0.95); }
-            50% { opacity: 1; transform: scale(1.02); box-shadow: 0 0 15px var(--accent-green); }
-            100% { opacity: 1; transform: scale(1); }
+        
+        /* Viewfinder Corners */
+        .viewfinder-corners {
+            width: 65%;
+            height: 65%;
+            position: relative;
+            transition: opacity 0.3s;
         }
-        .flash-animation { animation: flash-active 0.3s ease-out; }
+        .corner {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-color: var(--ui-passive);
+            transition: all 0.2s;
+        }
+        .tl { top: 0; left: 0; border-top: 3px solid; border-left: 3px solid; }
+        .tr { top: 0; right: 0; border-top: 3px solid; border-right: 3px solid; }
+        .bl { bottom: 0; left: 0; border-bottom: 3px solid; border-left: 3px solid; }
+        .br { bottom: 0; right: 0; border-bottom: 3px solid; border-right: 3px solid; }
+        
+        /* State Modifiers */
+        .viewfinder-corners.locked .corner { 
+            border-color: var(--primary-green); 
+            box-shadow: 0 0 15px var(--primary-green); 
+            transform: scale(1.1);
+        }
+        
+        /* Bottom Panel */
+        .scan-panel {
+            background: rgba(10,10,10,0.95);
+            padding: 20px;
+            border-top: 1px solid #333;
+        }
+        .scan-results-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+        .scan-res-box { position: relative; }
+        .scan-res-box textarea {
+            width: 100%; height: 40px; background: #222; border: 1px solid #444;
+            border-radius: 6px; color: #fff; padding: 8px; font-size: 12px;
+            text-align: center; resize: none;
+        }
+        .scan-indicator {
+            position: absolute; top: -5px; right: -5px;
+            width: 10px; height: 10px; border-radius: 50%;
+            background: #333; border: 2px solid #000;
+            transition: all 0.2s;
+        }
+        .scan-indicator.r.active { background: var(--r-color); box-shadow: 0 0 8px var(--r-color); }
+        .scan-indicator.g.active { background: var(--g-color); box-shadow: 0 0 8px var(--g-color); }
+        .scan-indicator.b.active { background: var(--b-color); box-shadow: 0 0 8px var(--b-color); }
 
     </style>
 </head>
@@ -267,504 +329,691 @@
 
 <div id="app">
     
-    <!-- HEADER (Persistent) -->
+    <!-- Fixed Top Navigation -->
     <header class="app-header">
-        <div id="header-left" class="w-12">
-            <!-- Back Arrow injected here by JS -->
-        </div>
-        <div id="header-title" class="header-title">Spectrum_qr</div>
-        <div id="header-right" class="w-12 flex justify-end">
-            <div class="header-btn" onclick="toggleMenu()">☰</div>
-        </div>
+        <div id="btn-back" class="header-btn hidden" onclick="navBack()">←</div>
+        <div class="header-title">QRnament</div>
+        <div id="btn-menu" class="header-btn" onclick="toggleMenu()">☰</div>
     </header>
 
-    <!-- SCREEN A: LANDING -->
-    <div id="screen-landing" class="screen active">
-        <div class="flex-1 flex flex-col items-center justify-center p-8 gap-6">
-            <button class="btn-massive btn-create" onclick="navTo('selection')">
-                CREATE
-            </button>
-            <button class="btn-massive btn-scan" onclick="openCamera()">
-                SCAN <span>🔍</span>
-            </button>
-        </div>
-    </div>
-
-    <!-- SCREEN B: SELECTION -->
-    <div id="screen-selection" class="screen">
-        <div class="flex-1 flex flex-col items-center justify-center p-8 gap-6">
-            <button class="btn-massive btn-create" style="background: #444; box-shadow: none;" onclick="navTo('generator', 'ornament')">
-                ORNAMENT QR
-            </button>
-            <button class="btn-massive btn-create" style="background: #222; border: 2px solid var(--accent-orange);" onclick="navTo('generator', 'spectrum')">
-                3D SPECTRUM QR
-            </button>
-        </div>
-    </div>
-
-    <!-- SCREEN C: GENERATOR -->
-    <div id="screen-generator" class="screen">
-        <div class="gen-layout">
-            
-            <!-- Sacred Zone (Top) -->
-            <div class="zone-sacred" onclick="hideKeyboard()">
-                <div class="qr-frame">
-                    <canvas id="canvas-output" width="512" height="512" style="width: 100%; height: 100%; object-fit: contain;"></canvas>
-                </div>
-                <div id="tech-stats" class="text-[10px] text-zinc-600 mt-2 tracking-widest">
-                    STANDBY | MATRIX: NULL
+    <!-- Main Content Container -->
+    <div class="screen-container">
+        
+        <!-- SCREEN: MAIN -->
+        <div id="screen-main" class="screen active">
+            <div class="main-content">
+                <p class="main-desc">Create and scan ornamental QR codes with advanced multi-channel encoding.</p>
+                <div class="btn-row">
+                    <button class="btn-main btn-create" onclick="navTo('selection')">+ Create</button>
+                    <button class="btn-main btn-scan" onclick="openScanner()">🔍 Scan</button>
                 </div>
             </div>
+        </div>
 
-            <!-- Control Zone (Middle) -->
-            <div class="zone-controls">
-                <button id="btn-save" class="btn-control" onclick="saveImage()" disabled>SAVE</button>
-                <button id="btn-scan-mode" class="btn-control" onclick="openCamera()">SCAN</button>
-                <button id="btn-regen" class="btn-control hidden" onclick="regenerateOrnament()">REGENERATE</button>
+        <!-- SCREEN: SELECTION -->
+        <div id="screen-selection" class="screen">
+            <div class="main-content">
+                <p class="main-desc">Choose your generation mode.</p>
+                <div style="display:flex; flex-direction:column; gap:16px; width:100%; max-width:280px;">
+                    <button class="btn-main btn-create" onclick="navTo('ornament')">Ornament QR</button>
+                    <button class="btn-main btn-create" style="background:#333; border:1px solid #444;" onclick="navTo('3d')">3D QR (beta)</button>
+                </div>
             </div>
+        </div>
 
-            <!-- Input Zone (Bottom) -->
-            <div class="zone-input">
+        <!-- SCREEN: ORNAMENT QR -->
+        <div id="screen-ornament" class="screen">
+            <div class="gen-layout">
+                <!-- Sacred QR Zone -->
+                <div class="zone-sacred" onclick="blurInputs()">
+                    <div class="qr-frame">
+                        <canvas id="canvas-ornament" width="512" height="512"></canvas>
+                    </div>
+                </div>
                 
-                <!-- Ornament Mode Inputs -->
-                <div id="input-ornament" class="hidden flex-1">
-                    <textarea id="text-single" class="sync-input h-full w-full" placeholder="Enter data..." oninput="handleInput()"></textarea>
+                <!-- Controls -->
+                <div class="zone-controls">
+                    <button id="btn-undo-orn" class="btn-ctrl btn-undo" onclick="undoOrnament()" disabled>Undo</button>
+                    <button class="btn-ctrl" onclick="regenerateOrnament()">Regenerate</button>
+                    <button id="btn-save-orn" class="btn-ctrl" onclick="saveImage('ornament')" disabled>Save</button>
                 </div>
 
-                <!-- Spectrum Mode Inputs -->
-                <div id="input-spectrum" class="hidden flex-1 flex flex-col gap-3">
-                    <div class="input-wrapper flex-1">
-                        <span class="input-label text-red-400">RED CHANNEL</span>
-                        <textarea id="text-r" class="sync-input ch-r h-full" placeholder="Channel R..." oninput="handleInput()"></textarea>
-                    </div>
-                    <div class="input-wrapper flex-1">
-                        <span class="input-label text-green-400">GREEN CHANNEL</span>
-                        <textarea id="text-g" class="sync-input ch-g h-full" placeholder="Channel G..." oninput="handleInput()"></textarea>
-                    </div>
-                    <div class="input-wrapper flex-1">
-                        <span class="input-label text-blue-400">BLUE CHANNEL</span>
-                        <textarea id="text-b" class="sync-input ch-b h-full" placeholder="Channel B..." oninput="handleInput()"></textarea>
+                <!-- Input Zone -->
+                <div class="zone-input">
+                    <div class="input-group">
+                        <label class="input-label">Your Text</label>
+                        <textarea id="input-ornament" class="text-input h-24" placeholder="Type something..." oninput="handleOrnamentInput()"></textarea>
                     </div>
                 </div>
+            </div>
+        </div>
 
+        <!-- SCREEN: 3D QR -->
+        <div id="screen-3d" class="screen">
+            <div class="gen-layout">
+                <!-- Sacred QR Zone -->
+                <div class="zone-sacred" onclick="blurInputs()">
+                    <div class="qr-frame">
+                        <canvas id="canvas-3d" width="512" height="512"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Controls -->
+                <div class="zone-controls">
+                    <button id="btn-save-3d" class="btn-ctrl" onclick="saveImage('3d')" disabled>Save</button>
+                </div>
+
+                <!-- Input Zone -->
+                <div class="zone-input">
+                    <div class="input-group">
+                        <label class="input-label" style="color:var(--r-color)">Red Channel</label>
+                        <textarea id="input-r" class="text-input sync-input" placeholder="Channel R..." oninput="handle3DInput()"></textarea>
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label" style="color:var(--g-color)">Green Channel</label>
+                        <textarea id="input-g" class="text-input sync-input" placeholder="Channel G..." oninput="handle3DInput()"></textarea>
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label" style="color:var(--b-color)">Blue Channel</label>
+                        <textarea id="input-b" class="text-input sync-input" placeholder="Channel B..." oninput="handle3DInput()"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- SCANNER OVERLAY (Integrated QRGB-13) -->
+    <div id="scanner-overlay">
+        <div class="scan-viewport">
+            <video id="video-feed" autoplay playsinline muted></video>
+            <canvas id="freeze-frame"></canvas>
+            
+            <div class="overlay-layer">
+                <div class="viewfinder-corners" id="viewfinder">
+                    <div class="corner tl"></div><div class="corner tr"></div>
+                    <div class="corner bl"></div><div class="corner br"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="scan-panel">
+            <div class="scan-results-grid">
+                <div class="scan-res-box">
+                    <div class="scan-indicator r" id="ind-r"></div>
+                    <textarea id="res-r" placeholder="RED" readonly></textarea>
+                </div>
+                <div class="scan-res-box">
+                    <div class="scan-indicator g" id="ind-g"></div>
+                    <textarea id="res-g" placeholder="GREEN" readonly></textarea>
+                </div>
+                <div class="scan-res-box">
+                    <div class="scan-indicator b" id="ind-b"></div>
+                    <textarea id="res-b" placeholder="BLUE" readonly></textarea>
+                </div>
+            </div>
+            <div style="margin-top:12px; display:flex; gap:10px;">
+                <button class="btn-ctrl" onclick="closeScanner()">Close</button>
+                <button class="btn-ctrl" onclick="document.getElementById('file-input').click()">Upload</button>
+                <input type="file" id="file-input" accept="image/*" style="display:none" onchange="handleScanFile(event)">
             </div>
         </div>
     </div>
 
-    <!-- CAMERA OVERLAY -->
-    <div id="camera-overlay">
-        <video id="video-feed" autoplay playsinline></video>
-        <div class="camera-hud"></div>
-        <button class="absolute top-4 left-4 text-white text-3xl z-10" onclick="closeCamera()">✕</button>
-        <canvas id="canvas-scan" class="hidden"></canvas>
-    </div>
-
-    <!-- MENU OVERLAY -->
-    <div id="menu-overlay" class="fixed inset-0 bg-black/95 z-[200] hidden flex-col items-center justify-center gap-8">
-        <a href="#" class="text-2xl font-bold text-zinc-300">History</a>
-        <a href="#" class="text-2xl font-bold text-zinc-300">Manual</a>
-        <a href="#" class="text-2xl font-bold text-zinc-300">Contacts</a>
-        <button onclick="toggleMenu()" class="mt-8 text-zinc-500">Close</button>
+    <!-- Menu Overlay -->
+    <div id="menu-overlay" style="position:absolute; inset:0; background:rgba(0,0,0,0.95); z-index:200; display:none; flex-direction:column; align-items:center; justify-content:center; gap:20px;">
+        <a href="#" onclick="toggleMenu()" style="font-size:24px; font-weight:bold;">History (Soon)</a>
+        <a href="#" onclick="toggleMenu()" style="font-size:24px; font-weight:bold;">About</a>
+        <button onclick="toggleMenu()" style="margin-top:20px; color:#666;">Close</button>
     </div>
 
 </div>
 
 <script>
-    // === 1. STATE MANAGEMENT ===
-    const state = {
-        currentScreen: 'landing',
-        mode: null, // 'ornament' | 'spectrum'
-        seed: Math.random() 
-    };
+// ==========================================
+// CORE LOGIC & STATE
+// ==========================================
 
-    // === 2. SPRITE LIBRARY (Mandala) ===
-    const SPRITE_LIB = [
-        [73,42,28,127,28,42,73], [127,65,93,85,93,65,127], [85,62,99,42,99,62,85],
-        [42,119,34,73,34,119,42], [28,42,73,119,73,42,28], [0,62,34,42,46,32,63],
-        [15,1,29,5,52,16,64], [64,96,112,120,112,96,64], [76,102,51,25,51,102,76],
-        [119,69,117,0,87,81,119], [119,85,119,0,119,85,119], [119,65,93,20,93,65,119],
-        [62,73,93,127,93,73,62], [42,107,8,119,8,107,42], [8,42,8,119,8,42,8],
-        [28,8,65,99,65,8,28], [54,99,73,20,73,99,54], [63,31,15,7,3,1,0],
-        [127,63,31,15,7,3,1], [127,31,31,7,7,1,1], [119,17,93,68,119,17,89],
-        [119,21,87,80,127,17,89], [119,85,127,20,127,85,119], [87,80,87,0,117,5,117],
-        [95,80,87,65,117,5,125], [30,80,87,65,117,5,60], [91,80,11,93,104,5,109],
-        [42,99,8,93,8,99,42], [99,99,0,0,0,99,99], [99,99,99,99,99,99,99],
-        [119,93,99,34,99,93,119], [54,85,99,8,99,85,54], [91,73,109,36,54,18,91],
-        [127,8,107,34,107,8,127], [42,34,42,8,42,34,42], [56,43,9,127,72,106,14],
-        [60,72,81,99,69,9,30], [12,56,33,107,66,14,24], [32,126,34,34,34,63,2],
-        [100,94,51,42,102,61,19], [6,92,118,34,55,29,48], [28,62,119,99,119,62,28],
-        [62,99,73,93,73,99,62], [126,67,89,85,77,97,63], [54,85,107,28,107,85,54],
-        [127,119,99,73,99,119,127], [12,22,51,113,14,76,104], [107,73,8,127,8,73,107],
-        [0,62,34,42,58,2,126], [85,21,117,5,125,1,127], [52,102,71,85,71,102,52],
-        [8,8,42,34,54,20,93], [119,99,107,8,107,99,119], [62,34,107,8,107,34,62],
-        [73,62,34,107,34,62,73], [123,123,96,107,3,111,111], [91,27,96,107,3,108,109],
-        [0,63,32,62,2,126,0], [64,95,81,93,69,125,1], [51,51,102,102,76,76,25]
-    ];
+const state = {
+    screen: 'main',
+    history: ['main'],
+    mode: null,
+    ornament: {
+        text: '',
+        seed: Date.now(),
+        undoStack: [] // Stores previous seeds
+    }
+};
 
-    // === 3. DOM REFS ===
-    const els = {
-        app: document.getElementById('app'),
-        screens: {
-            landing: document.getElementById('screen-landing'),
-            selection: document.getElementById('screen-selection'),
-            generator: document.getElementById('screen-generator')
-        },
-        header: { left: document.getElementById('header-left'), title: document.getElementById('header-title') },
-        inputs: {
-            ornament: document.getElementById('input-ornament'),
-            spectrum: document.getElementById('input-spectrum'),
-            single: document.getElementById('text-single'),
-            r: document.getElementById('text-r'), g: document.getElementById('text-g'), b: document.getElementById('text-b')
-        },
-        canvas: document.getElementById('canvas-output'),
-        btnSave: document.getElementById('btn-save'),
-        btnRegen: document.getElementById('btn-regen'),
-        stats: document.getElementById('tech-stats'),
-        cameraOverlay: document.getElementById('camera-overlay'),
-        video: document.getElementById('video-feed'),
-        scanCanvas: document.getElementById('canvas-scan')
-    };
+const els = {
+    header: document.querySelector('.app-header'),
+    title: document.querySelector('.header-title'),
+    backBtn: document.getElementById('btn-back'),
+    menuBtn: document.getElementById('btn-menu'),
+    screens: {
+        main: document.getElementById('screen-main'),
+        selection: document.getElementById('screen-selection'),
+        ornament: document.getElementById('screen-ornament'),
+        '3d': document.getElementById('screen-3d')
+    },
+    canvasOrnament: document.getElementById('canvas-ornament'),
+    canvas3d: document.getElementById('canvas-3d'),
+    inputs: {
+        ornament: document.getElementById('input-ornament'),
+        r: document.getElementById('input-r'),
+        g: document.getElementById('input-g'),
+        b: document.getElementById('input-b')
+    },
+    btns: {
+        saveOrn: document.getElementById('btn-save-orn'),
+        undoOrn: document.getElementById('btn-undo-orn'),
+        save3d: document.getElementById('btn-save-3d')
+    },
+    // Scanner elements
+    scannerOverlay: document.getElementById('scanner-overlay'),
+    video: document.getElementById('video-feed'),
+    freeze: document.getElementById('freeze-frame'),
+    res: { r: document.getElementById('res-r'), g: document.getElementById('res-g'), b: document.getElementById('res-b') },
+    ind: { r: document.getElementById('ind-r'), g: document.getElementById('ind-g'), b: document.getElementById('ind-b') },
+    viewfinder: document.getElementById('viewfinder')
+};
 
-    // === 4. NAVIGATION ENGINE ===
-    function navTo(screenId, mode = null) {
-        // Hide all
-        Object.values(els.screens).forEach(s => s.classList.remove('active'));
-        
-        // Set target
-        els.screens[screenId].classList.add('active');
-        state.currentScreen = screenId;
+// ==========================================
+// NAVIGATION ENGINE
+// ==========================================
 
-        // Header Logic
-        if (screenId === 'landing') {
-            els.header.left.innerHTML = '';
-            els.header.title.textContent = 'Spectrum_qr';
-        } else if (screenId === 'selection') {
-            els.header.left.innerHTML = '<div class="header-btn" onclick="navTo(\'landing\')">←</div>';
-            els.header.title.textContent = 'Select Mode';
-        } else if (screenId === 'generator') {
-            els.header.left.innerHTML = '<div class="header-btn" onclick="navTo(\'selection\')">←</div>';
-            
-            // Mode Logic
-            state.mode = mode;
-            setupGeneratorMode(mode);
-        }
+function navTo(screenId) {
+    // Hide current
+    els.screens[state.screen].classList.remove('active');
+    
+    // Set new
+    state.history.push(state.screen);
+    state.screen = screenId;
+    
+    els.screens[screenId].classList.add('active');
+    
+    // Header logic
+    if (screenId === 'main') {
+        els.backBtn.classList.add('hidden');
+    } else {
+        els.backBtn.classList.remove('hidden');
+    }
+}
+
+function navBack() {
+    if (state.history.length <= 1) return;
+    
+    const prev = state.history.pop();
+    els.screens[state.screen].classList.remove('active');
+    
+    state.screen = prev;
+    els.screens[prev].classList.add('active');
+    
+    if (prev === 'main') els.backBtn.classList.add('hidden');
+}
+
+function toggleMenu() {
+    const m = document.getElementById('menu-overlay');
+    m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
+}
+
+function blurInputs() {
+    document.activeElement.blur();
+}
+
+// ==========================================
+// SPRITE LIBRARY (7x7 Mandala)
+// ==========================================
+const SPRITE_LIB = [
+    [73,42,28,127,28,42,73], [127,65,93,85,93,65,127], [85,62,99,42,99,62,85],
+    [42,119,34,73,34,119,42], [28,42,73,119,73,42,28], [0,62,34,42,46,32,63],
+    [15,1,29,5,52,16,64], [64,96,112,120,112,96,64], [76,102,51,25,51,102,76],
+    [119,69,117,0,87,81,119], [119,85,119,0,119,85,119], [119,65,93,20,93,65,119],
+    [62,73,93,127,93,73,62], [42,107,8,119,8,107,42], [8,42,8,119,8,42,8],
+    [28,8,65,99,65,8,28], [54,99,73,20,73,99,54], [63,31,15,7,3,1,0],
+    [127,63,31,15,7,3,1], [127,31,31,7,7,1,1], [119,17,93,68,119,17,89],
+    [119,21,87,80,127,17,89], [119,85,127,20,127,85,119], [87,80,87,0,117,5,117],
+    [95,80,87,65,117,5,125], [30,80,87,65,117,5,60], [91,80,11,93,104,5,109],
+    [42,99,8,93,8,99,42], [99,99,0,0,0,99,99], [99,99,99,99,99,99,99],
+    [119,93,99,34,99,93,119], [54,85,99,8,99,85,54], [91,73,109,36,54,18,91],
+    [127,8,107,34,107,8,127], [42,34,42,8,42,34,42], [56,43,9,127,72,106,14],
+    [60,72,81,99,69,9,30], [12,56,33,107,66,14,24], [32,126,34,34,34,63,2],
+    [100,94,51,42,102,61,19], [6,92,118,34,55,29,48], [28,62,119,99,119,62,28],
+    [62,99,73,93,73,99,62], [126,67,89,85,77,97,63], [54,85,107,28,107,85,54],
+    [127,119,99,73,99,119,127], [12,22,51,113,14,76,104], [107,73,8,127,8,73,107],
+    [0,62,34,42,58,2,126], [85,21,117,5,125,1,127], [52,102,71,85,71,102,52],
+    [8,8,42,34,54,20,93], [119,99,107,8,107,99,119], [62,34,107,8,107,34,62],
+    [73,62,34,107,34,62,73], [123,123,96,107,3,111,111], [91,27,96,107,3,108,109],
+    [0,63,32,62,2,126,0], [64,95,81,93,69,125,1], [51,51,102,102,76,76,25]
+];
+
+// ==========================================
+// ORNAMENT ENGINE
+// ==========================================
+
+function handleOrnamentInput() {
+    const val = els.inputs.ornament.value;
+    els.btns.saveOrn.disabled = val.length === 0;
+    
+    // Generate without changing seed (keeps pattern consistent with text change)
+    generateOrnament(false); 
+}
+
+function regenerateOrnament() {
+    // Save current seed to undo stack
+    state.ornament.undoStack.push(state.ornament.seed);
+    els.btns.undoOrn.disabled = false;
+    
+    // New random seed
+    state.ornament.seed = Math.random();
+    generateOrnament(false);
+}
+
+function undoOrnament() {
+    if (state.ornament.undoStack.length === 0) return;
+    
+    state.ornament.seed = state.ornament.undoStack.pop();
+    els.btns.undoOrn.disabled = state.ornament.undoStack.length === 0;
+    generateOrnament(false);
+}
+
+function generateOrnament(userInput = true) {
+    const text = els.inputs.ornament.value;
+    if (!text) {
+        clearCanvas(els.canvasOrnament);
+        return;
     }
 
-    function setupGeneratorMode(mode) {
-        // Reset UI
-        els.inputs.ornament.classList.add('hidden');
-        els.inputs.spectrum.classList.add('hidden');
-        els.btnRegen.classList.add('hidden');
-        els.btnSave.disabled = true;
-        els.btnSave.style.opacity = '0.3';
-        
-        clearCanvas();
+    try {
+        const qr = qrcode(0, 'M');
+        qr.addData(unescape(encodeURIComponent(text)));
+        qr.make();
 
-        if (mode === 'ornament') {
-            els.header.title.textContent = 'QRnament';
-            els.inputs.ornament.classList.remove('hidden');
-            els.inputs.ornament.classList.add('flex'); // Flex container
-            els.btnRegen.classList.remove('hidden');
-        } else {
-            els.header.title.textContent = 'Spectrum_qr';
-            els.inputs.spectrum.classList.remove('hidden');
-            els.inputs.spectrum.classList.add('flex');
-            syncInputHeight(); // Initial sync
-        }
-    }
+        const modCount = qr.getModuleCount();
+        const quietZone = 4;
+        const totalSize = modCount + quietZone * 2;
+        const cellSize = 512 / totalSize;
 
-    function toggleMenu() {
-        document.getElementById('menu-overlay').classList.toggle('hidden');
-        document.getElementById('menu-overlay').classList.toggle('flex');
-    }
-
-    // === 5. INPUT HANDLING & SYNCHRONIZATION ===
-    function handleInput() {
-        if (state.mode === 'ornament') {
-            const val = els.inputs.single.value;
-            if (val.length > 0) {
-                els.btnSave.disabled = false;
-                els.btnSave.style.opacity = '1';
-                generateOrnament();
-            } else {
-                els.btnSave.disabled = true;
-                els.btnSave.style.opacity = '0.3';
-                clearCanvas();
-            }
-            els.stats.innerText = `TEXT: ${val.length} CHARS`;
-        } else {
-            syncInputHeight(); // Keep heights aligned
-            checkSpectrumValidity();
-            generateSpectrum();
-        }
-    }
-
-    // Synchronizes height of R, G, B textareas
-    function syncInputHeight() {
-        // Reset heights to auto to measure true scrollHeight
-        const inputs = [els.inputs.r, els.inputs.g, els.inputs.b];
-        inputs.forEach(i => i.style.height = 'auto');
-        
-        // Find max height
-        const maxH = Math.max(...inputs.map(i => i.scrollHeight));
-        
-        // Apply max height to all
-        inputs.forEach(i => i.style.height = maxH + 'px');
-    }
-
-    function checkSpectrumValidity() {
-        const r = els.inputs.r.value.trim();
-        const g = els.inputs.g.value.trim();
-        const b = els.inputs.b.value.trim();
-        
-        const isValid = r.length > 0 && g.length > 0 && b.length > 0;
-
-        if (isValid) {
-            if (els.btnSave.disabled) {
-                // Trigger flash animation
-                els.btnSave.classList.add('flash-animation');
-                setTimeout(() => els.btnSave.classList.remove('flash-animation'), 300);
-            }
-            els.btnSave.disabled = false;
-            els.btnSave.style.opacity = '1';
-        } else {
-            els.btnSave.disabled = true;
-            els.btnSave.style.opacity = '0.3';
-        }
-    }
-
-    function hideKeyboard() {
-        document.activeElement.blur();
-    }
-
-    // === 6. QR GENERATION ENGINES ===
-
-    function clearCanvas() {
-        const ctx = els.canvas.getContext('2d');
-        ctx.fillStyle = "#000000";
+        const ctx = els.canvasOrnament.getContext('2d');
+        ctx.fillStyle = "#000";
         ctx.fillRect(0, 0, 512, 512);
-    }
+        ctx.globalCompositeOperation = "screen";
 
-    // --- ORNAMENT ENGINE (Seeded Random) ---
-    function generateOrnament() {
-        const text = els.inputs.single.value;
-        if (!text) return;
+        // Generate Art Layers based on Seed
+        const gridR = buildGrid(totalSize);
+        const gridG = buildGrid(totalSize);
 
-        try {
-            const qr = qrcode(0, 'M');
-            qr.addData(unescape(encodeURIComponent(text)));
-            qr.make();
-            
-            const modCount = qr.getModuleCount();
-            const quietZone = 4;
-            const totalSize = modCount + quietZone * 2;
-            const cellSize = 512 / totalSize;
-
-            const ctx = els.canvas.getContext('2d');
-            ctx.fillStyle = "#000";
-            ctx.fillRect(0, 0, 512, 512);
-
-            // Generate Grids
-            const gridR = buildGrid(totalSize);
-            const gridG = buildGrid(totalSize);
-
-            // Draw Layers (Screen blend)
-            ctx.globalCompositeOperation = "screen";
-            
-            ctx.fillStyle = "#FF0000";
-            drawGrid(ctx, gridR, totalSize, cellSize);
-            
-            ctx.fillStyle = "#00FF00";
-            drawGrid(ctx, gridG, totalSize, cellSize);
-            
-            // Draw Blue Channel (Data)
-            ctx.fillStyle = "#0000FF";
-            for(let r=0; r<modCount; r++) {
-                for(let c=0; c<modCount; c++) {
-                    if(qr.isDark(r, c)) {
-                        ctx.fillRect((c+quietZone)*cellSize, (r+quietZone)*cellSize, cellSize, cellSize);
-                    }
+        ctx.fillStyle = "#FF0000";
+        drawGrid(ctx, gridR, totalSize, cellSize);
+        
+        ctx.fillStyle = "#00FF00";
+        drawGrid(ctx, gridG, totalSize, cellSize);
+        
+        // Draw Blue Data Layer
+        ctx.fillStyle = "#0000FF";
+        for(let r=0; r<modCount; r++) {
+            for(let c=0; c<modCount; c++) {
+                if(qr.isDark(r, c)) {
+                    ctx.fillRect((c+quietZone)*cellSize, (r+quietZone)*cellSize, cellSize, cellSize);
                 }
             }
+        }
+        ctx.globalCompositeOperation = "source-over";
 
-            ctx.globalCompositeOperation = "source-over";
+    } catch(e) { console.error(e); }
+}
 
-        } catch(e) { console.error(e); }
-    }
+// Seeded Random Helper
+function seededRandom() {
+    let x = Math.sin(state.ornament.seed++) * 10000;
+    return x - Math.floor(x);
+}
 
-    function regenerateOrnament() {
-        state.seed = Math.random(); // Change seed
-        generateOrnament();
-    }
+function buildGrid(size) {
+    const grid = Array(size).fill(0).map(() => Array(size).fill(0));
+    const center = Math.floor(size/2);
+    const maxBlocks = Math.ceil((size/2 + 7)/7);
+    const octantMap = new Map();
 
-    // Seeded Random helper
-    function seededRandom() {
-        let x = Math.sin(state.seed++) * 10000;
-        return x - Math.floor(x);
-    }
+    for(let by=0; by<maxBlocks; by++) {
+        for(let bx=by; bx<maxBlocks; bx++) {
+            const patternIdx = Math.floor(seededRandom() * SPRITE_LIB.length);
+            const pattern = SPRITE_LIB[patternIdx];
+            const flipX = seededRandom() > 0.5;
+            const flipY = seededRandom() > 0.5;
 
-    function buildGrid(size) {
-        const grid = Array(size).fill(0).map(() => Array(size).fill(0));
-        const center = Math.floor(size/2);
-        const maxBlocks = Math.ceil((size/2 + 7)/7);
-        const octantMap = new Map();
-
-        for(let by=0; by<maxBlocks; by++) {
-            for(let bx=by; bx<maxBlocks; bx++) {
-                const patternIdx = Math.floor(seededRandom() * SPRITE_LIB.length);
-                const pattern = SPRITE_LIB[patternIdx];
-                const flipX = seededRandom() > 0.5;
-                const flipY = seededRandom() > 0.5;
-
-                for(let py=0; py<7; py++) {
-                    for(let px=0; px<7; px++) {
-                        let sX = flipX ? (6-px) : px;
-                        let sY = flipY ? (6-py) : py;
+            for(let py=0; py<7; py++) {
+                for(let px=0; px<7; px++) {
+                    let sX = flipX ? (6-px) : px;
+                    let sY = flipY ? (6-py) : py;
+                    
+                    if((pattern[sY] >> (6-sX)) & 1) {
+                        let xRel = (bx*7) + px - 3;
+                        let yRel = (by*7) + py - 3;
                         
-                        if((pattern[sY] >> (6-sX)) & 1) {
-                            let xRel = (bx*7) + px - 3;
-                            let yRel = (by*7) + py - 3;
-                            
-                            if(xRel >= yRel && yRel >= 0) {
-                                octantMap.set(`${xRel},${yRel}`, true);
-                            }
+                        if(xRel >= yRel && yRel >= 0) {
+                            octantMap.set(`${xRel},${yRel}`, true);
                         }
                     }
                 }
             }
         }
-
-        // Apply Symmetry
-        octantMap.forEach((v, k) => {
-            const [x, y] = k.split(',').map(Number);
-            const points = [
-                [x, y], [y, x], [-x, y], [-y, x],
-                [x, -y], [y, -x], [-x, -y], [-y, -x]
-            ];
-            points.forEach(([px, py]) => {
-                const aX = center + px;
-                const aY = center + py;
-                if(aX >= 0 && aX < size && aY >= 0 && aY < size) grid[aY][aX] = 1;
-            });
-        });
-
-        return grid;
     }
 
-    function drawGrid(ctx, grid, size, cell) {
-        for(let r=0; r<size; r++) {
-            for(let c=0; c<size; c++) {
-                if(grid[r][c]) ctx.fillRect(c*cell, r*cell, cell+0.5, cell+0.5);
-            }
+    // Symmetry
+    octantMap.forEach((v, k) => {
+        const [x, y] = k.split(',').map(Number);
+        const points = [
+            [x, y], [y, x], [-x, y], [-y, x],
+            [x, -y], [y, -x], [-x, -y], [-y, -x]
+        ];
+        points.forEach(([px, py]) => {
+            const aX = center + px;
+            const aY = center + py;
+            if(aX >= 0 && aX < size && aY >= 0 && aY < size) grid[aY][aX] = 1;
+        });
+    });
+
+    return grid;
+}
+
+function drawGrid(ctx, grid, size, cell) {
+    for(let r=0; r<size; r++) {
+        for(let c=0; c<size; c++) {
+            if(grid[r][c]) ctx.fillRect(c*cell, r*cell, cell+0.5, cell+0.5);
         }
     }
+}
 
-    // --- SPECTRUM ENGINE ---
-    function generateSpectrum() {
-        const rText = els.inputs.r.value.trim();
-        const gText = els.inputs.g.value.trim();
-        const bText = els.inputs.b.value.trim();
 
-        const ctx = els.canvas.getContext('2d');
-        ctx.fillStyle = "#000";
-        ctx.fillRect(0, 0, 512, 512);
+// ==========================================
+// 3D QR ENGINE
+// ==========================================
 
-        if(!rText && !gText && !bText) return;
+function handle3DInput() {
+    sync3DHeights();
+    generate3DQR();
+    check3DValidity();
+}
 
-        // Determine Max Version
-        let maxVer = 1;
-        [rText, gText, bText].forEach(t => {
-            if(!t) return;
-            try {
-                const tmp = qrcode(0, 'M');
-                tmp.addData(unescape(encodeURIComponent(t)));
-                tmp.make();
-                const v = Math.floor((tmp.getModuleCount() - 17) / 4);
-                if(v > maxVer) maxVer = v;
-            } catch(e) {}
-        });
+function sync3DHeights() {
+    // Reset heights to measure scrollHeight
+    const inputs = [els.inputs.r, els.inputs.g, els.inputs.b];
+    inputs.forEach(i => i.style.height = 'auto');
+    
+    // Find max
+    const maxH = Math.max(...inputs.map(i => i.scrollHeight));
+    
+    // Apply
+    inputs.forEach(i => i.style.height = maxH + 'px');
+}
 
-        const matrixSize = (maxVer*4)+17;
-        els.stats.innerText = `RGB_MODE: ACTIVE | MATRIX: ${matrixSize}x${matrixSize}`;
+function check3DValidity() {
+    const r = els.inputs.r.value.trim();
+    const g = els.inputs.g.value.trim();
+    const b = els.inputs.b.value.trim();
+    
+    const valid = r.length > 0 && g.length > 0 && b.length > 0;
+    els.btns.save3d.disabled = !valid;
+}
 
-        ctx.globalCompositeOperation = "lighten";
-        
-        const colors = ["#FF0000", "#00FF00", "#0000FF"];
-        const texts = [rText, gText, bText];
+function generate3DQR() {
+    const texts = [els.inputs.r.value, els.inputs.g.value, els.inputs.b.value];
+    if(!texts.some(t => t.trim())) return clearCanvas(els.canvas3d);
 
-        texts.forEach((text, i) => {
-            if(!text) return;
-            try {
-                const qr = qrcode(maxVer, 'M');
-                qr.addData(unescape(encodeURIComponent(text)));
-                qr.make();
-                
-                const mod = 512 / qr.getModuleCount();
-                ctx.fillStyle = colors[i];
-                
-                for (let r = 0; r < qr.getModuleCount(); r++) {
-                    for (let c = 0; c < qr.getModuleCount(); c++) {
-                        if (qr.isDark(r, c)) ctx.fillRect(c * mod, r * mod, mod, mod);
-                    }
-                }
-            } catch(e) {}
-        });
-        
-        ctx.globalCompositeOperation = "source-over";
-    }
-
-    // === 7. CAMERA & SCANNING ===
-    let stream = null;
-
-    async function openCamera() {
+    // Find max version
+    let maxVer = 1;
+    texts.forEach(t => {
+        if(!t) return;
         try {
-            stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-            els.video.srcObject = stream;
-            els.cameraOverlay.style.display = 'flex';
-            requestAnimationFrame(scanFrame);
-        } catch(e) {
-            alert("Camera permission denied.");
-        }
-    }
+            const tmp = qrcode(0, 'M');
+            tmp.addData(unescape(encodeURIComponent(t)));
+            tmp.make();
+            const v = Math.floor((tmp.getModuleCount()-17)/4);
+            if(v > maxVer) maxVer = v;
+        } catch(e) {}
+    });
 
-    function closeCamera() {
-        if(stream) stream.getTracks().forEach(t => t.stop());
-        els.cameraOverlay.style.display = 'none';
-    }
+    const ctx = els.canvas3d.getContext('2d');
+    ctx.fillStyle = "#000";
+    ctx.fillRect(0, 0, 512, 512);
+    ctx.globalCompositeOperation = "lighten";
+    
+    const colors = ["#FF0000", "#00FF00", "#0000FF"];
 
-    function scanFrame() {
-        if(els.cameraOverlay.style.display === 'none') return;
-        
-        if(els.video.readyState === els.video.HAVE_ENOUGH_DATA) {
-            const w = els.video.videoWidth, h = els.video.videoHeight;
-            els.scanCanvas.width = w; els.scanCanvas.height = h;
-            const ctx = els.scanCanvas.getContext('2d');
-            ctx.drawImage(els.video, 0, 0, w, h);
-            
-            const data = ctx.getImageData(0, 0, w, h);
-            const code = jsQR(data.data, w, h);
-            
-            if(code) {
-                // Success! Feed data to inputs
-                closeCamera();
-                navTo('generator', 'ornament');
-                els.inputs.single.value = code.data;
-                handleInput();
-            } else {
-                requestAnimationFrame(scanFrame);
+    texts.forEach((text, i) => {
+        if(!text) return;
+        try {
+            const qr = qrcode(maxVer, 'M');
+            qr.addData(unescape(encodeURIComponent(text)));
+            qr.make();
+            const mod = 512 / qr.getModuleCount();
+            ctx.fillStyle = colors[i];
+            for(let r=0; r<qr.getModuleCount(); r++) {
+                for(let c=0; c<qr.getModuleCount(); c++) {
+                    if(qr.isDark(r, c)) ctx.fillRect(c*mod, r*mod, mod, mod);
+                }
             }
+        } catch(e) {}
+    });
+    
+    ctx.globalCompositeOperation = "source-over";
+}
+
+// ==========================================
+// SCANNER (QRGB-13 Integration)
+// ==========================================
+
+const scanState = {
+    scanning: false,
+    locked: { r: false, g: false, b: false }
+};
+
+class SmartController {
+    constructor() { this.gain = 1.0; this.offset = 0; this.k1 = 0.15; this.k2 = 0.25; this.failStreak = 0; }
+    updateMetrics(imgData) {
+        const d = imgData.data; let bright = 0, sum = 0;
+        const len = d.length / 4;
+        for (let i = 0; i < d.length; i += 4) { sum += d[i]; if (d[i] > 240) bright++; }
+        const brightRatio = bright / len;
+        
+        if (brightRatio > 0.35) { this.gain = Math.max(0.6, this.gain - 0.15); this.offset -= 10; }
+        else if (brightRatio < 0.15) { this.gain = Math.min(3.2, this.gain + 0.2); this.offset += 8; }
+        
+        this.failStreak++;
+        if (this.failStreak > 10) { this.gain *= 1.05; this.offset -= 4; }
+        
+        this.gain = Math.max(0.5, Math.min(3.5, this.gain));
+        this.offset = Math.max(-120, Math.min(60, this.offset));
+    }
+    reset() { this.gain = 1.0; this.offset = 0; this.failStreak = 0; }
+}
+
+const controllers = { r: new SmartController(), g: new SmartController(), b: new SmartController() };
+let workBuffer = null;
+
+function openScanner() {
+    els.scannerOverlay.style.display = 'flex';
+    scanReset();
+    startCamera();
+}
+
+function closeScanner() {
+    scanState.scanning = false;
+    if(els.video.srcObject) els.video.srcObject.getTracks().forEach(t => t.stop());
+    els.scannerOverlay.style.display = 'none';
+}
+
+function scanReset() {
+    scanState.locked = {r:false, g:false, b:false};
+    scanState.scanning = false;
+    [els.res.r, els.res.g, els.res.b].forEach(t => t.value = '');
+    [els.ind.r, els.ind.g, els.ind.b].forEach(i => i.classList.remove('active'));
+    Object.values(controllers).forEach(c => c.reset());
+}
+
+async function startCamera() {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+        els.video.srcObject = stream;
+        els.video.play();
+        els.freeze.style.display = 'none';
+        els.video.style.display = 'block';
+        scanState.scanning = true;
+        scanLoop();
+    } catch(e) { alert("Camera Error"); closeScanner(); }
+}
+
+function handleScanFile(e) {
+    const file = e.target.files[0]; if(!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+        const img = new Image();
+        img.onload = () => {
+            els.freeze.width = 512; els.freeze.height = 512;
+            const s = Math.min(img.width, img.height);
+            const ctx = els.freeze.getContext('2d');
+            ctx.drawImage(img, (img.width-s)/2, (img.height-s)/2, s, s, 0, 0, 512, 512);
+            els.freeze.style.display = 'block';
+            els.video.style.display = 'none';
+            scanState.scanning = true;
+            scanLoop();
+        };
+        img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+}
+
+function scanLoop() {
+    if (!scanState.scanning) return;
+    
+    // Get Frame
+    let source = null;
+    if (els.video.style.display !== 'none' && els.video.readyState >= 2) {
+        const ctx = els.freeze.getContext('2d');
+        ctx.drawImage(els.video, 0, 0, 512, 512);
+        source = ctx.getImageData(0, 0, 512, 512);
+    } else if (els.freeze.style.display !== 'none') {
+        source = els.freeze.getContext('2d').getImageData(0, 0, 512, 512);
+    }
+    
+    if (source) {
+        // Find unlocked channel
+        const active = ['r', 'g', 'b'].filter(c => !scanState.locked[c]);
+        if (active.length > 0) {
+            // Round robin
+            const ch = active[0];
+            processChannel(source, ch);
         } else {
-            requestAnimationFrame(scanFrame);
+            scanState.scanning = false;
+            return;
         }
     }
+    
+    requestAnimationFrame(scanLoop);
+}
 
-    // === 8. UTILS ===
-    function saveImage() {
-        const link = document.createElement('a');
-        link.download = `spectrum_${Date.now()}.png`;
-        link.href = els.canvas.toDataURL();
-        link.click();
+function processChannel(source, ch) {
+    const ctrl = controllers[ch];
+    const chIdx = ch === 'r' ? 0 : (ch === 'g' ? 1 : 2);
+    
+    let processed;
+    if (ctrl.failStreak < 6) {
+        processed = applyBradleyAlg(source, chIdx);
+    } else {
+        if (!workBuffer) workBuffer = new Uint8ClampedArray(source.data);
+        workBuffer.set(source.data);
+        let tempData = new ImageData(workBuffer, 512, 512);
+        applySCIMathAlg(tempData, ch, ctrl);
+        processed = applyBradleyAlg(tempData, 0);
+        ctrl.updateMetrics(processed);
     }
+
+    const code = jsQR(processed.data, 512, 512, { inversionAttempts: "attemptBoth" });
+
+    if (code) {
+        lockScanChannel(ch, code.data);
+        els.viewfinder.classList.add('locked');
+        setTimeout(() => els.viewfinder.classList.remove('locked'), 300);
+    } else {
+        ctrl.failStreak++;
+    }
+}
+
+function lockScanChannel(ch, data) {
+    if (scanState.locked[ch]) return;
+    scanState.locked[ch] = true;
+    controllers[ch].reset();
+    
+    els.res[ch].value = data;
+    els.ind[ch].classList.add('active');
+    
+    if (scanState.locked.r && scanState.locked.g && scanState.locked.b) {
+        scanState.scanning = false;
+        // Optional: Auto-generate composite or save
+        alert("All 3 channels decoded!");
+    }
+}
+
+// Algorithm Helpers
+function applyBradleyAlg(imgData, chIdx) {
+    const w = imgData.width, h = imgData.height;
+    const input = imgData.data;
+    const output = new Uint8ClampedArray(w * h * 4);
+    const intImg = new Int32Array(w * h);
+    const s = Math.floor(w / 8), t = 15;
+    for (let y = 0; y < h; y++) {
+        let sum = 0;
+        for (let x = 0; x < w; x++) {
+            sum += input[(y * w + x) * 4 + chIdx];
+            intImg[y * w + x] = (y > 0 ? intImg[(y - 1) * w + x] : 0) + sum;
+        }
+    }
+    for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+            const x1 = Math.max(x - s, 0), x2 = Math.min(x + s, w - 1);
+            const y1 = Math.max(y - s, 0), y2 = Math.min(y + s, h - 1);
+            const count = (x2 - x1) * (y2 - y1);
+            const sum = intImg[y2 * w + x2] - intImg[y1 * w + x2] - intImg[y2 * w + x1] + intImg[y1 * w + x1];
+            const val = input[(y * w + x) * 4 + chIdx];
+            const res = (val * count < sum * (100 - t) / 100) ? 0 : 255;
+            const idx = (y * w + x) * 4;
+            output[idx] = output[idx+1] = output[idx+2] = res; output[idx+3] = 255;
+        }
+    }
+    return new ImageData(output, w, h);
+}
+
+function applySCIMathAlg(data, ch, ctrl) {
+    const d = data.data;
+    for (let i = 0; i < d.length; i += 4) {
+        const r = d[i], g = d[i+1], b = d[i+2];
+        let target = ch === 'r' ? r : (ch === 'g' ? g : b);
+        let n1 = ch === 'r' ? g : (ch === 'g' ? r : r);
+        let n2 = ch === 'r' ? b : (ch === 'g' ? b : g);
+        let res = (target - (n1 * ctrl.k1 + n2 * ctrl.k2)) * ctrl.gain + ctrl.offset;
+        res = Math.max(0, Math.min(255, res));
+        d[i] = d[i+1] = d[i+2] = res; d[i+3] = 255;
+    }
+}
+
+// ==========================================
+// UTILS
+// ==========================================
+
+function clearCanvas(canvas) {
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = "#000";
+    ctx.fillRect(0, 0, 512, 512);
+}
+
+function saveImage(mode) {
+    const canvas = mode === 'ornament' ? els.canvasOrnament : els.canvas3d;
+    const link = document.createElement('a');
+    link.download = `QRnament_${Date.now()}.png`;
+    link.href = canvas.toDataURL();
+    link.click();
+}
 
 </script>
 </body>
